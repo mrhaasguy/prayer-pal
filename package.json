@@ -1,0 +1,29 @@
+{
+  "name": "bargain-price-monitor",
+  "version": "0.0.1",
+  "description": "Front and backend application for a service that will monitor used services for good deals",
+  "engines": {
+    "node": "10.x"
+  },
+  "scripts": {
+    "start": "node server",
+    "build": "cd react-ui/ && npm install && npm run build"
+  },
+  "cacheDirectories": [
+    "node_modules",
+    "react-ui/node_modules"
+  ],
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrhaasguy/bargain-price-monitor"
+  },
+  "keywords": [
+    "node",
+    "heroku"
+  ],
+  "license": "MIT",
+  "devDependencies": {}
+}
