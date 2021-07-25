@@ -6,8 +6,9 @@
     "node": "10.x"
   },
   "scripts": {
+    "postinstall": "cd react-ui/ && npm install",
     "start": "ts-node server",
-    "build": "cd react-ui/ && npm install && npm run build",
+    "build": "npm run build",
     "test": "jest && cd react-ui && npm test"
   },
   "cacheDirectories": [
@@ -40,6 +41,9 @@
   },
   "jest": {
     "verbose": true,
-    "testPathIgnorePatterns": ["/node_modules/", "/react-ui/"]
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/react-ui/"
+    ]
   }
 }
