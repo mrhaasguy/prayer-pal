@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   const [message, setMessage] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
-  const [url, setUrl] = useState('/api');
+  const [url, setUrl] = useState('/api/v1/statuscheck');
 
   const fetchData = useCallback(() => {
     fetch(url)
@@ -16,10 +16,10 @@ function App() {
         return response.json();
       })
       .then(json => {
-        setMessage(json.message);
+        setMessage(`Got message from server: ${json.result}` as any);
         setIsFetching(false);
       }).catch(e => {
-        setMessage(`API call failed: ${e}`);
+        setMessage(`API call failed: ${e}` as any);
         setIsFetching(false);
       })
   }, [url]);

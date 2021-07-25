@@ -1,13 +1,15 @@
-const express = require('express');
-const path = require('path');
-const cluster = require('cluster');
-const numCPUs = require('os').cpus().length;
+import express from 'express';
+import path from 'path';
+import cluster from 'cluster';
+import os from 'os';
+
+const numCPUs = os.cpus().length;
 
 const isDev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 5000;
 
 // Multi-process to utilize all CPU cores.
-if (!isDev && cluster.isMaster) {
+if (!isDev && cluster.isPrimary) {
   console.error(`Node cluster master ${process.pid} is running`);
 
   // Fork workers.
@@ -25,10 +27,9 @@ if (!isDev && cluster.isMaster) {
   // Priority serve any static files.
   app.use(express.static(path.resolve(__dirname, '../react-ui/build')));
 
-  // Answer API requests.
-  app.get('/api', function (req, res) {
-    res.set('Content-Type', 'application/json');
-    res.send('{"message":"Hello from the custom server!"}');
+  // API requests
+  app.get('/api/v1/statuscheck', async (req, res) => {
+    res.status(200).json({ 'result': 'OK' });
   });
 
   // All remaining requests return the React app, so it can handle routing.
