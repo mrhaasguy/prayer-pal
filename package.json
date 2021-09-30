@@ -6,14 +6,14 @@
     "node": "10.x"
   },
   "scripts": {
-    "postinstall": "cd react-ui/ && npm install",
+    "postinstall": "cd angular-ui/ && npm install",
     "start": "ts-node server",
-    "build": "cd react-ui/ && npm run build",
-    "test": "jest && cd react-ui && npm test"
+    "build": "cd angular-ui/ && npm run build",
+    "test": "jest && cd angular-ui && npm test"
   },
   "cacheDirectories": [
     "node_modules",
-    "react-ui/node_modules"
+    "angular-ui/node_modules"
   ],
   "dependencies": {
     "@types/node": "^16.4.2",
@@ -43,7 +43,7 @@
     "verbose": true,
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/react-ui/"
+      "/angular-ui/"
     ]
   }
 }
