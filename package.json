@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Front and backend application for a service that will monitor used services for good deals",
   "engines": {
-    "node": "10.x"
+    "node": "14.x"
   },
   "scripts": {
     "postinstall": "cd angular-ui/ && npm install",
