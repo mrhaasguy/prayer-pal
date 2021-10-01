@@ -23,7 +23,6 @@ jobs:
           command: |
             google-chrome --version
             chromedriver --version
-            npm test
           name: Check install
 workflows:
   # Below is the definition of your workflow.
@@ -33,10 +32,12 @@ workflows:
   deploy-to-heroku:
     jobs:
       - test
+      - node/test
       - heroku/deploy-via-git:
           force: true # this parameter instructs the push to use a force flag when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
           requires:
-            - test # only run deploy-via-git job if the build job has completed
+            - test
+            - node/test # only run deploy-via-git job if the build job has completed
           filters:
             branches:
               # This sample config runs this job on any branch matching the regex below, however, it's more likely you want to only run this job on master.
