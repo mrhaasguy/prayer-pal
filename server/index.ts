@@ -25,7 +25,7 @@ if (!isDev && cluster.isPrimary) {
   const app = express();
 
   // Priority serve any static files.
-  app.use(express.static(path.resolve(__dirname, '../angular-ui/dist')));
+  app.use(express.static(path.resolve(__dirname, '../angular-ui/dist/angular-ui')));
 
   // API requests
   app.get('/api/v1/statuscheck', async (req, res) => {
@@ -34,7 +34,7 @@ if (!isDev && cluster.isPrimary) {
 
   // All remaining requests return the React app, so it can handle routing.
   app.get('*', function(request, response) {
-    response.sendFile(path.resolve(__dirname, '../angular-ui/dist', 'index.html'));
+    response.sendFile(path.resolve(__dirname, '../angular-ui/dist/angular-ui', 'index.html'));
   });
 
   app.listen(PORT, function () {
