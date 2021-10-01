@@ -25,7 +25,6 @@ jobs:
             chromedriver --version
             npm test
           name: Check install
-workflows: null
 workflows:
   # Below is the definition of your workflow.
   # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
