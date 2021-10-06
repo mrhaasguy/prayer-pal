@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'path';
 import cluster from 'cluster';
 import os from 'os';
+import dal from './dal';
+import { IDalService, IMonitor } from "./interfaces/types";
 
 const numCPUs = os.cpus().length;
 
@@ -24,6 +26,10 @@ if (!isDev && cluster.isPrimary) {
 } else {
   const app = express();
 
+
+  app.use(express.json())
+  app.use(express.urlencoded({extended: true}))
+
   // Priority serve any static files.
   app.use(express.static(path.resolve(__dirname, '../angular-ui/dist/angular-ui')));
 
@@ -32,9 +38,49 @@ if (!isDev && cluster.isPrimary) {
     res.status(200).json({ 'result': 'OK' });
   });
 
-  // All remaining requests return the React app, so it can handle routing.
-  app.get('*', function(request, response) {
-    response.sendFile(path.resolve(__dirname, '../angular-ui/dist/angular-ui', 'index.html'));
+  app.post('/api/v1/monitor', async (req, res, next) => {
+    var input = req.body;
+    if (!input) return res.status(400).json({ error: 'body is required' });
+    if (!input.keyword) return res.status(400).json({ error: 'keyword is required' });
+    if (!input.userEmail) return res.status(400).json({ error: 'userEmail is required' });
+
+    var model: IMonitor = {
+      keyword: input.keyword,
+      userEmail: input.userEmail
+    };
+    await dal(async (dalService: IDalService) => {
+      await dalService.saveMonitor(model);
+    }).catch((err) => {
+      console.error("Database error:")
+      return next(err);
+    });
+
+    return res.status(201).json(model);
+  });
+  app.get('/api/v1/monitor/:id', async (req, res, next) => {
+    var id = req.params.id
+    if (!id) return res.status(400).json({ error: 'id is required' });
+
+    var model: IMonitor | null = null;
+    await dal(async (dalService: IDalService) => {
+      model = await dalService.getMonitor(id);
+    }).catch((err) => {
+      console.error("Database error:")
+      return next(err);
+    });
+
+    if (!model) {
+      res.status(404);
+      return;
+    }
+    res.status(200).json(model);
+  });
+
+  // All remaining requests return the Angular app, so it can handle routing.
+  app.get('*', function(req, res) {
+    if (req.originalUrl.indexOf('/api/') !== 0) {
+      res.sendFile(path.resolve(__dirname, '../angular-ui/dist/angular-ui', 'index.html'));
+    }
   });
 
   app.listen(PORT, function () {
