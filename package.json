@@ -16,8 +16,9 @@
     "angular-ui/node_modules"
   ],
   "dependencies": {
-    "@types/jest": "^27.0.2",
     "@types/node": "^16.4.2",
+    "@types/pg": "^8.6.1",
+    "@types/uuid": "^8.3.1",
     "amqplib": "^0.8.0",
     "axios": "^0.21.1",
     "express": "^4.17.1",
@@ -38,8 +39,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@types/pg": "^8.6.1",
-    "@types/uuid": "^8.3.1",
+    "@types/jest": "^27.0.2",
     "jest": "^27.2.4",
     "ts-jest": "^27.0.5",
     "ts-loader": "^9.2.6"
