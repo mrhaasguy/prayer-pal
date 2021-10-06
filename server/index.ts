@@ -48,12 +48,10 @@ if (!isDev && cluster.isPrimary) {
       keyword: input.keyword,
       userEmail: input.userEmail
     };
-    await dal(async (dalService: IDalService) => {
+    var succeeded = await dal(async (dalService: IDalService) => {
       await dalService.saveMonitor(model);
-    }).catch((err) => {
-      console.error("Database error:")
-      return next(err);
-    });
+    }).catch(next);
+    if (!succeeded) return;
 
     return res.status(201).json(model);
   });
@@ -62,15 +60,12 @@ if (!isDev && cluster.isPrimary) {
     if (!id) return res.status(400).json({ error: 'id is required' });
 
     var model: IMonitor | null = null;
-    await dal(async (dalService: IDalService) => {
+    var succeeded = await dal(async (dalService: IDalService) => {
       model = await dalService.getMonitor(id);
-    }).catch((err) => {
-      console.error("Database error:")
-      return next(err);
-    });
-
+    }).catch(next);
+    if (!succeeded) return;
     if (!model) {
-      res.status(404);
+      res.status(404).json("404 Not Found");
       return;
     }
     res.status(200).json(model);

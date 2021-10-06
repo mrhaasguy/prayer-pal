@@ -54,6 +54,7 @@ export default async function dalServiceFactory(action: any) {
     } finally {
         dalService.dispose();
     }
+    return true;
 }
 
 
