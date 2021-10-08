@@ -20,6 +20,7 @@ jest.mock('pg', () => {
 });
 
 afterEach(() => {
+    querySelectResults = [];
     jest.clearAllMocks();
     disposed = false;
 });
@@ -62,12 +63,24 @@ describe("dalService", ()=>{
             expect(poolClient.query.mock.calls[0][0]).toContain("SELECT");
             expect(poolClient.query.mock.calls[0][1]).toContain(id); // select statement should contain id
         });
-        it("should create new id guid", async ()=>{
-            let monitor : IMonitor = {};
+        it("should return a monitor if it exists", async ()=>{
+            let id : "SOME_ID"
+            var results: IMonitor;
+            querySelectResults = [{id: id, keyword: 'KW', user_email: 'email'}];
             await dal(async (dalService: IDalService) => {
-                await dalService.saveMonitor(monitor);
+                results = await dalService.getMonitor(id);
               });
-            expect(monitor.id).not.toBeUndefined();
+            expect(results).not.toBeNull();
+            expect(results).toEqual({id: id, keyword: 'KW', userEmail: 'email'});
+        });
+        it("should return null if it doesn't exist", async ()=>{
+            let id : "SOME_ID"
+            var results: IMonitor = undefined;
+            querySelectResults = [];
+            await dal(async (dalService: IDalService) => {
+                results = await dalService.getMonitor(id);
+              });
+            expect(results).toBeNull();
         });
         it("should dispose properly", async ()=>{
             let monitor : IMonitor = {};
