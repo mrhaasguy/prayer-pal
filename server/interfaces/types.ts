@@ -6,7 +6,7 @@ export interface IMonitor {
 
 export interface  IDalService {
     saveMonitor(model: IMonitor): Promise<void>,
-    getAllMonitorIds(): Promise<string[]>,
+    getAllMonitors(userEmail: string): Promise<IMonitor[]>,
     getMonitor(id: string) : Promise<IMonitor|null>,
     deleteMonitor(id: string): Promise<void>
 }
