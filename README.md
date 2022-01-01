@@ -2,15 +2,15 @@
 
 [![CircleCI](https://circleci.com/gh/mrhaasguy/bargain-price-monitor.svg?style=svg)](https://circleci.com/gh/mrhaasguy/bargain-price-monitor)
 
-Front and backend application for a service that will monitor used resale sites for good deals.
+Front and backend application for a service that will help keep track of prayer requests
 
 ## Running Locally
 
 Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
 
 ```sh
-$ git clone https://github.com/mrhaasguy/bargain-price-monitor # or clone your own fork
-$ cd bargain-price-monitor
+$ git clone https://github.com/mrhaasguy/prayer-pal # or clone your own fork
+$ cd prayer-pal
 $ npm install
 $ npm start
 ```
