@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL ||
-    "postgresql://postgres@localhost:5432/bargainpricemonitor",
+    "postgresql://postgres@localhost:5432/prayerpal",
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 

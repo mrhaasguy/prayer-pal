@@ -1,7 +1,7 @@
 {
-  "name": "bargain-price-monitor",
+  "name": "prayer-pal",
   "version": "0.0.1",
-  "description": "Front and backend application for a service that will monitor used services for good deals",
+  "description": "Front and backend application for a service that will help keep track of your prayer requests",
   "engines": {
     "node": "14.x"
   },
@@ -9,7 +9,8 @@
     "postinstall": "cd angular-ui/ && npm install",
     "start": "ts-node server",
     "build": "cd angular-ui/ && npm run build",
-    "test": "jest && cd angular-ui && npm test"
+    "test": "jest && cd angular-ui && npm test",
+    "jest": "jest"
   },
   "cacheDirectories": [
     "node_modules",
@@ -21,7 +22,10 @@
     "@types/uuid": "^8.3.1",
     "amqplib": "^0.8.0",
     "axios": "^0.21.1",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "html-to-text": "^8.1.0",
+    "mail-listener2": "^0.3.1",
     "nodemailer": "^6.6.3",
     "pg": "^8.6.0",
     "raygun": "^0.13.1",
@@ -31,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrhaasguy/bargain-price-monitor"
+    "url": "https://github.com/mrhaasguy/prayer-pal"
   },
   "keywords": [
     "node",
