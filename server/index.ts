@@ -3,7 +3,9 @@ import path from "path";
 import cluster from "cluster";
 import os from "os";
 import dal from "./dal";
-import { IDalService, IMonitor, IEmail } from "./interfaces/types";
+import { IDalService, IMonitor, IEmail, User } from "./interfaces/types";
+import { EmailParser } from "./emailParser";
+import nodemailer from 'nodemailer';
 
 const result = require('dotenv').config();
 if (result.error) {
@@ -187,7 +189,7 @@ mailListener.on("error", function(err:any){
 //   to: [ { address: 'prayer@thehaashaus.com', name: '' } ],
 //   date: 2021-12-31T03:09:01.000Z,
 //   receivedDate: 2021-12-31T03:09:13.000Z,
-mailListener.on("mail", function(mail: IEmail, seqno: any, attributes:any){
+mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any){
   // do something with mail object including attachments
   console.log('New email!');
   console.log('FROM: ', mail.from);
@@ -195,6 +197,46 @@ mailListener.on("mail", function(mail: IEmail, seqno: any, attributes:any){
   console.log('DATE: ' + mail.date);
   console.log('BODY TEXT: ' + mail.text);
   console.log('BODY HTML: ' + mail.html);
+
+  var parser = new EmailParser();
+  let user = await parser.parseUser(mail);
+  if (!user) {
+    if (mail.from[0]?.name && mail.from[0].name.indexOf('Haas') >= 0) {
+      await dal(async (dalService: IDalService) => {
+        user = {fullName: mail.from[0].name ?? '', emails: [{email: mail.from[0].address, isPrimary: true, userId:''}]}
+        await dalService.saveUser(user as User);
+        });
+    } else {
+      console.log('Ignoring email from "' + mail.from[0]?.address + '" since it is not a registered user');
+    }
+  }
+  if (user && user.id) {
+    console.log('parsing email...');
+    let prayerRequests = parser.parseEmailToPrayerRequests(user.id, mail);
+    await dal(async (dalService: IDalService) => {
+      await Promise.all(prayerRequests.map(p => dalService.savePrayerRequest(p)));
+      });
+
+    let transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 993, // imap port
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD
+      },
+    });
+  
+    // send mail with defined transport object
+    let info = await transporter.sendMail({
+      from: '"Prayer Pal" <' + process.env.SMTP_USER + '>', // sender address
+      to: user.emails.filter(u => u.isPrimary)[0].email,
+      subject: "Prayer Requests received", // Subject line
+      text: "Hey " + user.fullName +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
+    });
+  
+    console.log("Email sent: %s", info.messageId);
+  }
   //console.log("emailParsed", mail);
   // mail processing code goes here
 

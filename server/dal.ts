@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from "pg";
-import { IMonitor, IDalService } from "./interfaces/types";
+import { IMonitor, IDalService, User, PrayerRequest } from "./interfaces/types";
 import { v4 as uuidv4 } from "uuid";
 
 const pool = new Pool({
@@ -14,6 +14,58 @@ class DalService implements IDalService {
 
   constructor(client: PoolClient) {
     this.client = client;
+  }
+
+  public async getUserByEmail(email: string): Promise<User | undefined> {
+    console.log('looking up user by email "' + email + '"');
+    const results = await this.client.query(
+      "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE ue.email = $1",
+      [email]
+    );
+    console.log('Found: ' + JSON.stringify(results.rows));
+    let user: User | undefined = undefined;
+    results.rows.forEach(r => { 
+      user = user ?? {id: r.id, fullName: r.fullname, emails: []};
+      user.emails.push({userId: r.id, email: r.email, isPrimary: r.is_primary});
+    });
+    return user;
+  }
+  public async saveUser(model: User) {
+    if (!model.id) {
+      model.id = uuidv4();
+
+      await this.client.query(
+        "INSERT INTO users (id, fullname) " + "VALUES ($1, $2);",
+        [model.id, model.fullName]
+      );
+    }
+
+    for (let i = 0; i < model.emails.length; i += 1) {
+      let email = model.emails[i];
+      email.userId = model.id;
+      const results = await this.client.query(
+        "SELECT * FROM user_emails e WHERE e.user_id = $1 AND e.email = $2",
+        [model.id, email.email]
+      );
+
+      if (results.rows.length === 0) {
+        let emailId = uuidv4();
+        await this.client.query(
+          "INSERT INTO user_emails (id, user_id, email, is_primary) " + "VALUES ($1, $2, $3, $4);",
+          [emailId, email.userId, email.email, email.isPrimary]
+        );
+      }
+    }
+  }
+
+  public async savePrayerRequest(model: PrayerRequest) {
+    if (!model.id) {
+      model.id = uuidv4();
+    }
+    await this.client.query(
+      "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " + "VALUES ($1, $2, $3, $4, $5, $6, $7);",
+      [model.id, model.userId, model.date, model.from, model.subject, model.category, model.message]
+    );
   }
 
   public async saveMonitor(model: IMonitor) {
