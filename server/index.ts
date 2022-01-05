@@ -218,9 +218,13 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
       });
 
     let transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: 993, // imap port
-      secure: false, // true for 465, false for other ports
+      host: 'smtp.titan.email',
+      port: 465, // imap port
+      tls: {
+        requestCert: true,
+        rejectUnauthorized: false,
+     },
+      secure: true, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
@@ -230,7 +234,7 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
     // send mail with defined transport object
     let info = await transporter.sendMail({
       from: '"Prayer Pal" <' + process.env.SMTP_USER + '>', // sender address
-      to: user.emails.filter(u => u.isPrimary)[0].email,
+      to: user.emails.filter(u => u.isPrimary)[0]?.email ?? 'aaron@thehaashaus.com',
       subject: "Prayer Requests received", // Subject line
       text: "Hey " + user.fullName +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
     });
