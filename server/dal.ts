@@ -19,21 +19,40 @@ class DalService implements IDalService {
   public async getUserByEmail(email: string): Promise<User | undefined> {
     console.log('looking up user by email "' + email + '"');
     const results = await this.client.query(
-      "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE ue.email = $1",
+      "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE u.id IN (select user_id FROM user_emails where email = $1)",
       [email]
     );
-    console.log('Found: ' + JSON.stringify(results.rows));
+    console.log('Found query result: ' + JSON.stringify(results.rows));
     let user: User | undefined = undefined;
     results.rows.forEach(r => { 
-      user = user ?? {id: r.id, fullName: r.fullname, emails: []};
-      user.emails.push({userId: r.id, email: r.email, isPrimary: r.is_primary});
+      user = user ?? {id: r.user_id, fullName: r.fullname, emails: []};
+      user.emails.push({userId: user.id ?? '', email: r.email, isPrimary: r.is_primary});
     });
+
+    console.log('Found user: ' + JSON.stringify(user ?? {}));
+    return user;
+  }
+  public async getUserByName(fullName: string): Promise<User | undefined> {
+    console.log('looking up user by name "' + fullName + '"');
+    const results = await this.client.query(
+      "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE u.fullname = $1",
+      [fullName]
+    );
+    console.log('Found query result: ' + JSON.stringify(results.rows));
+    let user: User | undefined = undefined;
+    results.rows.forEach(r => { 
+      user = user ?? {id: r.user_id, fullName: r.fullname, emails: []};
+      user.emails.push({userId: user.id ?? '', email: r.email, isPrimary: r.is_primary});
+    });
+
+    console.log('Found user: ' + JSON.stringify(user ?? {}));
     return user;
   }
   public async saveUser(model: User) {
     if (!model.id) {
       model.id = uuidv4();
 
+      console.log("Saving new user " + model.id);
       await this.client.query(
         "INSERT INTO users (id, fullname) " + "VALUES ($1, $2);",
         [model.id, model.fullName]
@@ -50,8 +69,10 @@ class DalService implements IDalService {
 
       if (results.rows.length === 0) {
         let emailId = uuidv4();
+
+        console.log("Saving new user_email " + emailId + " for user " + email.userId);
         await this.client.query(
-          "INSERT INTO user_emails (id, user_id, email, is_primary) " + "VALUES ($1, $2, $3, $4);",
+          "INSERT INTO user_emails (id, user_id, email, is_primary) VALUES ($1, $2, $3, $4);",
           [emailId, email.userId, email.email, email.isPrimary]
         );
       }
@@ -59,9 +80,24 @@ class DalService implements IDalService {
   }
 
   public async savePrayerRequest(model: PrayerRequest) {
+    const alreadyExistsResults = await this.client.query(
+      "SELECT * from prayer_requests where user_id = $1 AND category = $2 AND message = $3",
+      [model.userId, model.category, model.message]
+    );
+    if (alreadyExistsResults.rows.length > 0) {
+      const id = alreadyExistsResults.rows[0].id;
+      console.log("Prayer request " + id + " already exists, updating date");
+      await this.client.query(
+        "UPDATE prayer_requests SET email_date = $1 WHERE id = $2",
+        [model.date, id]
+      );
+      return;
+    }
     if (!model.id) {
       model.id = uuidv4();
     }
+
+    console.log("INSERT Prayer request " + model.id);
     await this.client.query(
       "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " + "VALUES ($1, $2, $3, $4, $5, $6, $7);",
       [model.id, model.userId, model.date, model.from, model.subject, model.category, model.message]

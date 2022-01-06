@@ -1,11 +1,20 @@
 import {convert} from 'html-to-text'
 import dal from "./dal";
 import { IEmail, PrayerRequest, User, IDalService } from './interfaces/types';
-//import {parseFullName} from 'parse-full-name';
+import {parseFullName} from 'parse-full-name';
 
 export class EmailParser {
 
   constructor() {
+  }
+
+  public parseFullNameFromEmail(email: IEmail): string {
+    const name = parseFullName(email.from[0].name ?? '');
+    if (name.error?.length) {
+      console.log('Name parse error: ' + name.error)
+      return email.from[0].name ?? ''; // We tried our best
+    }
+    return name.last + ', ' + name.first;
   }
 
   public async parseUser(email: IEmail): Promise<User | null> {
@@ -13,14 +22,23 @@ export class EmailParser {
     await dal(async (dalService: IDalService)=>{
       user = await dalService.getUserByEmail(email.from[0].address);
       if (!user) {
-        console.log('No user found for email ' + email.from[0].address)
-        return null;
+        if (email.from[0].name) {
+          const fullName = this.parseFullNameFromEmail(email);
+          console.log('No user found for email ' + email.from[0].address +', looking up by name ' + fullName);
+          user = await dalService.getUserByName(fullName);
+
+          if (user) {
+            user.emails.push({email: email.from[0].address, isPrimary: false, userId: user.id ?? ''});
+            await dalService.saveUser(user);
+          }
+        }
       }
-      // if (email.from.name) {
-      //   const name = parseFullName(email.from.name)
-      // }
     });
     
+    if (!user) {
+      console.log('No user found for email or name');
+      return null;
+    }
     return user ?? null;
   }
 

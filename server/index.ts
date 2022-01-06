@@ -6,6 +6,7 @@ import dal from "./dal";
 import { IDalService, IMonitor, IEmail, User } from "./interfaces/types";
 import { EmailParser } from "./emailParser";
 import nodemailer from 'nodemailer';
+import {parseFullName} from 'parse-full-name';
 
 const result = require('dotenv').config();
 if (result.error) {
@@ -203,7 +204,7 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
   if (!user) {
     if (mail.from[0]?.name && mail.from[0].name.indexOf('Haas') >= 0) {
       await dal(async (dalService: IDalService) => {
-        user = {fullName: mail.from[0].name ?? '', emails: [{email: mail.from[0].address, isPrimary: true, userId:''}]}
+        user = {fullName: parser.parseFullNameFromEmail(mail), emails: [{email: mail.from[0].address, isPrimary: true, userId:''}]}
         await dalService.saveUser(user as User);
         });
     } else {
@@ -236,7 +237,7 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
       from: '"Prayer Pal" <' + process.env.SMTP_USER + '>', // sender address
       to: user.emails.filter(u => u.isPrimary)[0]?.email ?? 'aaron@thehaashaus.com',
       subject: "Prayer Requests received", // Subject line
-      text: "Hey " + user.fullName +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
+      text: "Hey " + parseFullName(user.fullName).first +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
     });
   
     console.log("Email sent: %s", info.messageId);

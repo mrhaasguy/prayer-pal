@@ -6,6 +6,7 @@ export interface IMonitor {
 
 export interface  IDalService {
     getUserByEmail(email: string): Promise<User | undefined>,
+    getUserByName(fullName: string): Promise<User | undefined>,
     saveUser(model: User): Promise<void>,
     savePrayerRequest(model: PrayerRequest): Promise<void>,
     saveMonitor(model: IMonitor): Promise<void>,
