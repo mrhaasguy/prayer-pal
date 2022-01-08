@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from "pg";
-import { IMonitor, IDalService, User, PrayerRequest } from "./interfaces/types";
+import { IMonitor, IDalService, User, PrayerRequest, UserEmail } from "./interfaces/types";
 import { v4 as uuidv4 } from "uuid";
 
 const pool = new Pool({
@@ -14,6 +14,16 @@ class DalService implements IDalService {
 
   constructor(client: PoolClient) {
     this.client = client;
+  }
+
+  public async getAllPrimaryUserEmails(): Promise<UserEmail[]> {
+    const results = await this.client.query("SELECT * FROM user_emails where is_primary = true");
+    return results.rows.map(r => <UserEmail>{
+      id: r.id,
+      userId: r.user_id,
+      email: r.email,
+      isPrimary: r.is_primary
+    });
   }
 
   public async getUserByEmail(email: string): Promise<User | undefined> {
@@ -80,19 +90,21 @@ class DalService implements IDalService {
   }
 
   public async savePrayerRequest(model: PrayerRequest) {
+    if (model.id) {
+      await this.updatePrayerRequest(model);
+      return;
+    }
     const alreadyExistsResults = await this.client.query(
       "SELECT * from prayer_requests where user_id = $1 AND category = $2 AND message = $3",
       [model.userId, model.category, model.message]
     );
     if (alreadyExistsResults.rows.length > 0) {
-      const id = alreadyExistsResults.rows[0].id;
-      console.log("Prayer request " + id + " already exists, updating date");
-      await this.client.query(
-        "UPDATE prayer_requests SET email_date = $1 WHERE id = $2",
-        [model.date, id]
-      );
+      model.id = alreadyExistsResults.rows[0].id;
+      console.log("Prayer request " + model.id + " already exists, updating date");
+      await this.updatePrayerRequest(model);
       return;
     }
+
     if (!model.id) {
       model.id = uuidv4();
     }
@@ -102,6 +114,33 @@ class DalService implements IDalService {
       "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " + "VALUES ($1, $2, $3, $4, $5, $6, $7);",
       [model.id, model.userId, model.date, model.from, model.subject, model.category, model.message]
     );
+  }
+
+  public async updatePrayerRequest(model: PrayerRequest): Promise<void> {
+
+    await this.client.query(
+      "UPDATE prayer_requests SET email_date = $1, prayer_count = $2, last_prayer_date = $3 WHERE id = $4",
+      [model.date, model.prayerCount, model.lastPrayerDate, model.id]
+    );
+    return;
+  }
+
+  public async getTopPrayerRequests(userId: string): Promise<PrayerRequest[]> {
+    const results = await this.client.query(
+      "SELECT * from prayer_requests where user_id = $1 AND email_date > current_date at time zone 'UTC' - interval '30 days' ORDER BY prayer_count ASC, last_prayer_Date DESC LIMIT 10",
+      [userId]
+    );
+    return results.rows.map(r => <PrayerRequest>{
+      id: r.id,
+      userId: r.user_id,
+      date: r.email_date,
+      from: r.from,
+      subject: r.subject,
+      category: r.category,
+      message: r.message,
+      lastPrayerDate: r.last_prayer_date,
+      prayerCount: r.prayer_count
+    });
   }
 
   public async saveMonitor(model: IMonitor) {

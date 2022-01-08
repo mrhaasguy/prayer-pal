@@ -58,7 +58,7 @@ export class EmailParser {
       if (lineTrimmed.startsWith('From:')) {
         from = lineTrimmed.split('From:')[1].trim();
       } else if (lineTrimmed.startsWith('* ')) {
-        prayerRequests.push({userId, date: email.date, message: lineTrimmed.substring(2), subject: email.subject, from: email.from[0].address, category});
+        prayerRequests.push({userId, date: email.date, message: lineTrimmed.substring(2), subject: email.subject, from: email.from[0].address, category, lastPrayerDate: null, prayerCount: 0});
       } else if (lineTrimmed.length > 0) {
         category = lineTrimmed;
       }

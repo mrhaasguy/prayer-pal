@@ -7,8 +7,10 @@ export interface IMonitor {
 export interface  IDalService {
     getUserByEmail(email: string): Promise<User | undefined>,
     getUserByName(fullName: string): Promise<User | undefined>,
+    getAllPrimaryUserEmails(): Promise<UserEmail[]>,
     saveUser(model: User): Promise<void>,
     savePrayerRequest(model: PrayerRequest): Promise<void>,
+    getTopPrayerRequests(userId: string): Promise<PrayerRequest[]>,
     saveMonitor(model: IMonitor): Promise<void>,
     getAllMonitors(userEmail: string): Promise<IMonitor[]>,
     getMonitor(id: string) : Promise<IMonitor|null>,
@@ -31,6 +33,8 @@ export interface PrayerRequest {
     subject: string,
     category?: string,
     message: string,
+    prayerCount: number,
+    lastPrayerDate: Date | null
 }
 
 export interface User {
