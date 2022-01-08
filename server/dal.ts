@@ -127,7 +127,7 @@ class DalService implements IDalService {
 
   public async getTopPrayerRequests(userId: string): Promise<PrayerRequest[]> {
     const results = await this.client.query(
-      "SELECT * from prayer_requests where user_id = $1 AND email_date > current_date at time zone 'UTC' - interval '30 days' ORDER BY prayer_count ASC, last_prayer_Date DESC LIMIT 10",
+      "SELECT * from prayer_requests where user_id = $1 AND email_date > current_date at time zone 'UTC' - interval '30 days' ORDER BY prayer_count ASC, last_prayer_Date DESC , id ASC LIMIT 10",
       [userId]
     );
     return results.rows.map(r => <PrayerRequest>{
