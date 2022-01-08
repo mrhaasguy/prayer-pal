@@ -54,7 +54,7 @@ let transporter = nodemailer.createTransport({
       let info = await transporter.sendMail({
         from: '"Prayer Pal" <' + process.env.SMTP_USER + ">", // sender address
         to: userEmail.email,
-        subject: "Prayer Requests received", // Subject line
+        subject: "Today's Prayer Requests" // Subject line
         text:
           "Hey there, \r\n Here are todays prayer requests:\r\n" +
           JSON.stringify(prayerRequests, null, 2), // plain text body
