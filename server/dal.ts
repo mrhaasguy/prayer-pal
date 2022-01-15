@@ -92,7 +92,7 @@ class DalService implements IDalService {
   public async savePrayerRequest(model: PrayerRequest) {
     if (model.id) {
       await this.updatePrayerRequest(model);
-      return;
+      return model;
     }
     const alreadyExistsResults = await this.client.query(
       "SELECT * from prayer_requests where user_id = $1 AND category = $2 AND message = $3",
@@ -102,7 +102,7 @@ class DalService implements IDalService {
       model.id = alreadyExistsResults.rows[0].id;
       console.log("Prayer request " + model.id + " already exists, updating date");
       await this.updatePrayerRequestEmailDate(model);
-      return this.getPrayerRequest(model.id);
+      return (await this.getPrayerRequest(model.id ?? '')) ?? model;
     }
 
     if (!model.id) {
