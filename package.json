@@ -9,6 +9,7 @@
     "postinstall": "cd angular-ui/ && npm install",
     "start": "ts-node server",
     "start:worker": "ts-node server/worker.ts",
+    "start:listener": "ts-node server/emailListener.ts",
     "build": "cd angular-ui/ && npm run build",
     "test": "jest && cd angular-ui && npm test",
     "jest": "jest"
