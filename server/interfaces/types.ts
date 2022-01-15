@@ -9,7 +9,7 @@ export interface  IDalService {
     getUserByName(fullName: string): Promise<User | undefined>,
     getAllPrimaryUserEmails(): Promise<UserEmail[]>,
     saveUser(model: User): Promise<void>,
-    savePrayerRequest(model: PrayerRequest): Promise<void>,
+    savePrayerRequest(model: PrayerRequest): Promise<PrayerRequest>,
     getTopPrayerRequests(userId: string): Promise<PrayerRequest[]>,
     saveMonitor(model: IMonitor): Promise<void>,
     getAllMonitors(userEmail: string): Promise<IMonitor[]>,

@@ -101,8 +101,8 @@ class DalService implements IDalService {
     if (alreadyExistsResults.rows.length > 0) {
       model.id = alreadyExistsResults.rows[0].id;
       console.log("Prayer request " + model.id + " already exists, updating date");
-      await this.updatePrayerRequest(model);
-      return;
+      await this.updatePrayerRequestEmailDate(model);
+      return this.getPrayerRequest(model.id);
     }
 
     if (!model.id) {
@@ -114,6 +114,7 @@ class DalService implements IDalService {
       "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " + "VALUES ($1, $2, $3, $4, $5, $6, $7);",
       [model.id, model.userId, model.date, model.from, model.subject, model.category, model.message]
     );
+    return model;
   }
 
   public async updatePrayerRequest(model: PrayerRequest): Promise<void> {
@@ -123,6 +124,35 @@ class DalService implements IDalService {
       [model.date, model.prayerCount, model.lastPrayerDate, model.id]
     );
     return;
+  }
+  public async updatePrayerRequestEmailDate(model: PrayerRequest): Promise<void> {
+
+    await this.client.query(
+      "UPDATE prayer_requests SET email_date = $1 WHERE id = $2",
+      [model.date, model.id]
+    );
+    return;
+  }
+
+  public async getPrayerRequest(id: string): Promise<PrayerRequest | null> {
+    const results = await this.client.query(
+      "SELECT * from prayer_requests where id = $1",
+      [id]
+    );
+    if (results.rows.length > 0) {
+      return results.rows.map(r => <PrayerRequest>{
+        id: r.id,
+        userId: r.user_id,
+        date: r.email_date,
+        from: r.from,
+        subject: r.subject,
+        category: r.category,
+        message: r.message,
+        lastPrayerDate: r.last_prayer_date,
+        prayerCount: r.prayer_count
+      })[0];
+    }
+    return null;
   }
 
   public async getTopPrayerRequests(userId: string): Promise<PrayerRequest[]> {

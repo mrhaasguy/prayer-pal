@@ -215,7 +215,7 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
     console.log('parsing email...');
     let prayerRequests = parser.parseEmailToPrayerRequests(user.id, mail);
     await dal(async (dalService: IDalService) => {
-      await Promise.all(prayerRequests.map(p => dalService.savePrayerRequest(p)));
+      prayerRequests = await Promise.all(prayerRequests.map(p => dalService.savePrayerRequest(p)));
       });
 
     let transporter = nodemailer.createTransport({
@@ -235,7 +235,7 @@ mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any)
     // send mail with defined transport object
     let info = await transporter.sendMail({
       from: '"Prayer Pal" <' + process.env.SMTP_USER + '>', // sender address
-      to: user.emails.filter(u => u.isPrimary)[0]?.email ?? 'aaron@thehaashaus.com',
+      to: mail.from[0]?.address ?? 'aaron@thehaashaus.com',
       subject: "Prayer Requests received", // Subject line
       text: "Hey " + parseFullName(user.fullName).first +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
     });
