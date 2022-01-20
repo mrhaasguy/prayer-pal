@@ -2,9 +2,10 @@ import dal from "./dal";
 import { IDalService, IMonitor, IEmail, User } from "./interfaces/types";
 import nodemailer from "nodemailer";
 import { parseFullName } from "parse-full-name";
+import Mustache from "mustache";
+import * as fs from "fs";
 
 const result = require("dotenv").config();
-
 /**
  * Returns a random number between 0 (inclusive) and max (exclusive)
  */
@@ -51,6 +52,17 @@ let transporter = nodemailer.createTransport({
       );
       prayerRequests = takeRandom(prayerRequests, 3);
 
+      let html = fs
+        .readFileSync("./server/templates/daily-prayers-email.html", "utf8")
+        .toString();
+      html = Mustache.render(html, {
+        user: { name: "there" },
+        date: new Date().toISOString().split('T')[0],
+        email1: { title: `${prayerRequests[0].from} ${prayerRequests[0].subject}`, message: `[${prayerRequests[0].category}] ${prayerRequests[0].message}` },
+        email2: { title: `${prayerRequests[1].from} ${prayerRequests[1].subject}`, message: `[${prayerRequests[1].category}] ${prayerRequests[1].message}` },
+        email3: { title: `${prayerRequests[2].from} ${prayerRequests[2].subject}`, message: `[${prayerRequests[2].category}] ${prayerRequests[2].message}` },
+      });
+
       let info = await transporter.sendMail({
         from: '"Prayer Pal" <' + process.env.SMTP_USER + ">", // sender address
         to: userEmail.email,
@@ -58,6 +70,7 @@ let transporter = nodemailer.createTransport({
         text:
           "Hey there, \r\n Here are todays prayer requests:\r\n" +
           JSON.stringify(prayerRequests, null, 2), // plain text body
+        html,
       });
 
       console.log("Email sent: %s", info.messageId);
