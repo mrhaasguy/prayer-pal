@@ -30,6 +30,8 @@ if (!isDev && cluster.isPrimary) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Highest priority is to serve email static files from the public folder
+  app.use('/static', express.static('public'));
   // Priority serve any static files.
   app.use(
     express.static(path.resolve(__dirname, "../angular-ui/dist/angular-ui"))
