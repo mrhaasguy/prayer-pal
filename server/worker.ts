@@ -55,18 +55,36 @@ let transporter = nodemailer.createTransport({
       let html = fs
         .readFileSync("./server/templates/daily-prayers-email.html", "utf8")
         .toString();
+
+      let index = 0;
       html = Mustache.render(html, {
         user: { name: "there" },
-        date: new Date().toISOString().split('T')[0],
-        email1: { title: `${prayerRequests[0].from} ${prayerRequests[0].subject}`, message: `[${prayerRequests[0].category}] ${prayerRequests[0].message}` },
-        email2: { title: `${prayerRequests[1].from} ${prayerRequests[1].subject}`, message: `[${prayerRequests[1].category}] ${prayerRequests[1].message}` },
-        email3: { title: `${prayerRequests[2].from} ${prayerRequests[2].subject}`, message: `[${prayerRequests[2].category}] ${prayerRequests[2].message}` },
+        date: new Date(),
+        prayerRequests,
+        index: () => (index += 1),
+        FormatDate: function () {
+          return function (rawText: string, render: any) {
+            const rawDate = new Date(render(rawText));
+            console.log(rawDate);
+            return rawDate.toISOString().split("T")[0];
+          };
+        },
       });
 
       let info = await transporter.sendMail({
         from: '"Prayer Pal" <' + process.env.SMTP_USER + ">", // sender address
         to: userEmail.email,
-        subject: "Today's Prayer Requests", // Subject line
+        subject:
+          "Prayer Requests for " +
+          [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+          ][new Date().getUTCDay()], // Subject line
         text:
           "Hey there, \r\n Here are todays prayer requests:\r\n" +
           JSON.stringify(prayerRequests, null, 2), // plain text body
