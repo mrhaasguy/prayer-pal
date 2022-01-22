@@ -58,7 +58,7 @@ let transporter = nodemailer.createTransport({
 
       let index = 0;
       html = Mustache.render(html, {
-        user: { name: "there" },
+        user: { name: "Aaron", id: userEmail.userId },
         date: new Date(),
         prayerRequests,
         index: () => (index += 1),
@@ -93,13 +93,15 @@ let transporter = nodemailer.createTransport({
 
       console.log("Email sent: %s", info.messageId);
 
-      prayerRequests.forEach((prayerRequest) => {
-        prayerRequest.prayerCount += 1;
-        prayerRequest.lastPrayerDate = new Date();
-      });
-      await Promise.all(
-        prayerRequests.map((p) => dalService.savePrayerRequest(p))
-      );
+      // Don't automatically mark as prayed, let the user do it by clicking a button in the email.
+
+      // prayerRequests.forEach((prayerRequest) => {
+      //   prayerRequest.prayerCount += 1;
+      //   prayerRequest.lastPrayerDate = new Date();
+      // });
+      // await Promise.all(
+      //   prayerRequests.map((p) => dalService.savePrayerRequest(p))
+      // );
     }
   });
 })();

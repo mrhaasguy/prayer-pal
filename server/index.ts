@@ -10,6 +10,12 @@ const numCPUs = os.cpus().length;
 const isDev = process.env.NODE_ENV !== "production";
 const PORT = process.env.PORT || 5000;
 
+function isDateBeforeToday(date: Date | null) {
+  if (!date) {
+    return true;
+  }
+  return new Date(date.toDateString()) < new Date(new Date().toDateString());
+}
 // Multi-process to utilize all CPU cores.
 if (!isDev && cluster.isPrimary) {
   console.error(`Node cluster master ${process.pid} is running`);
@@ -31,7 +37,7 @@ if (!isDev && cluster.isPrimary) {
   app.use(express.urlencoded({ extended: true }));
 
   // Highest priority is to serve email static files from the public folder
-  app.use('/static', express.static('public'));
+  app.use("/static", express.static("public"));
   // Priority serve any static files.
   app.use(
     express.static(path.resolve(__dirname, "../angular-ui/dist/angular-ui"))
@@ -42,24 +48,44 @@ if (!isDev && cluster.isPrimary) {
     res.status(200).json({ result: "OK" });
   });
 
-  app.post("/api/v1/monitors", async (req, res, next) => {
-    var input = req.body;
-    if (!input) return res.status(400).json({ error: "body is required" });
-    if (!input.keyword)
-      return res.status(400).json({ error: "keyword is required" });
-    if (!input.userEmail)
-      return res.status(400).json({ error: "userEmail is required" });
+  app.get("/api/v1/prayer-request/prayed", async (req, res, next) => {
+    const userId = req.query.userId;
+    const prayerRequestIds = (req.query.prayerRequestIds as string).split(",");
+    if (!userId) return res.status(400).send("userId is required");
+    if (!prayerRequestIds || !prayerRequestIds.length)
+      return res.status(400).send("prayerRequestIds is required");
+    if (prayerRequestIds.length > 5)
+      return res.status(400).send("prayerRequestIds too long");
 
-    var model: IMonitor = {
-      keyword: input.keyword,
-      userEmail: input.userEmail,
-    };
+    let message: string = "";
     var succeeded = await dal(async (dalService: IDalService) => {
-      await dalService.saveMonitor(model);
+      for (let i = 0; i < prayerRequestIds.length; i += 1) {
+        let id = prayerRequestIds[i].trim();
+        if (id) {
+          console.log("Looking up prayerRequest " + id);
+          var prayerRequest = await dalService.getPrayerRequest(id);
+          if (prayerRequest) {
+            if (prayerRequest.userId !== userId) {
+              message +=
+                prayerRequest.id + " Does not belong to the given userId<br>";
+              return;
+            }
+            if (isDateBeforeToday(prayerRequest.lastPrayerDate)) {
+              message += prayerRequest.id + " Updated<br>";
+              prayerRequest.prayerCount += 1;
+              prayerRequest.lastPrayerDate = new Date();
+              await dalService.savePrayerRequest(prayerRequest);
+            } else {
+              message += prayerRequest.id + " Already updated today<br>";
+            }
+          } else {
+            message += id + " Not found<br>";
+          }
+        }
+      }
     }).catch(next);
-    if (!succeeded) return;
 
-    return res.status(201).json(model);
+    return res.status(200).send(message ?? "No messages");
   });
   app.get("/api/v1/monitors", async (req, res, next) => {
     var email = req.query.userEmail;
@@ -106,6 +132,4 @@ if (!isDev && cluster.isPrimary) {
       }: listening on port ${PORT}`
     );
   });
-
 }
-
