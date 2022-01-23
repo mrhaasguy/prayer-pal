@@ -1,3 +1,5 @@
+import { Sequelize } from "sequelize";
+
 export interface IMonitor {
   id?: string;
   keyword?: string;
@@ -24,28 +26,4 @@ export interface IEmail {
   date: Date;
   text?: string | null;
   html: string;
-}
-
-export interface PrayerRequest {
-  id?: string;
-  userId: string;
-  date: Date;
-  from: string;
-  subject: string;
-  category?: string;
-  message: string;
-  prayerCount: number;
-  lastPrayerDate: Date | null;
-}
-
-export interface User {
-  id?: string;
-  fullName: string;
-  emails: UserEmail[];
-}
-
-export interface UserEmail {
-  userId: string;
-  email: string;
-  isPrimary: boolean;
 }
