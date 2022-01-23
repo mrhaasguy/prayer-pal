@@ -4,6 +4,7 @@ import cluster from "cluster";
 import os from "os";
 import dal from "./dal";
 import { IDalService, IMonitor } from "./interfaces/types";
+import { validate } from "uuid";
 
 const numCPUs = os.cpus().length;
 
@@ -50,8 +51,11 @@ if (!isDev && cluster.isPrimary) {
 
   app.get("/api/v1/prayer-request/prayed", async (req, res, next) => {
     const userId = req.query.userId;
-    const prayerRequestIds = (req.query.prayerRequestIds as string).split(",");
+    const prayerRequestIds = ((req.query.prayerRequestIds as string) ?? "")
+      .split(",")
+      .filter((i) => i.trim().length > 0);
     if (!userId) return res.status(400).send("userId is required");
+    console.log(prayerRequestIds);
     if (!prayerRequestIds || !prayerRequestIds.length)
       return res.status(400).send("prayerRequestIds is required");
     if (prayerRequestIds.length > 5)
@@ -62,6 +66,10 @@ if (!isDev && cluster.isPrimary) {
       for (let i = 0; i < prayerRequestIds.length; i += 1) {
         let id = prayerRequestIds[i].trim();
         if (id) {
+          if (!validate(id)) {
+            message += id + " Not a valid GUID";
+            continue;
+          }
           console.log("Looking up prayerRequest " + id);
           var prayerRequest = await dalService.getPrayerRequest(id);
           if (prayerRequest) {
@@ -87,34 +95,34 @@ if (!isDev && cluster.isPrimary) {
 
     return res.status(200).send(message ?? "No messages");
   });
-  app.get("/api/v1/monitors", async (req, res, next) => {
-    var email = req.query.userEmail;
-    if (!email)
-      return res.status(400).json({ error: "userEmail parameter is required" });
+  // app.get("/api/v1/monitors", async (req, res, next) => {
+  //   var email = req.query.userEmail;
+  //   if (!email)
+  //     return res.status(400).json({ error: "userEmail parameter is required" });
 
-    var models: IMonitor[] = [];
-    var succeeded = await dal(async (dalService: IDalService) => {
-      models = await dalService.getAllMonitors(<string>email);
-    }).catch(next);
-    if (!succeeded) return;
+  //   var models: IMonitor[] = [];
+  //   var succeeded = await dal(async (dalService: IDalService) => {
+  //     models = await dalService.getAllMonitors(<string>email);
+  //   }).catch(next);
+  //   if (!succeeded) return;
 
-    res.status(200).json({ rows: models });
-  });
-  app.get("/api/v1/monitors/:id", async (req, res, next) => {
-    var id = req.params.id;
-    if (!id) return res.status(400).json({ error: "id is required" });
+  //   res.status(200).json({ rows: models });
+  // });
+  // app.get("/api/v1/monitors/:id", async (req, res, next) => {
+  //   var id = req.params.id;
+  //   if (!id) return res.status(400).json({ error: "id is required" });
 
-    var model: IMonitor | null = null;
-    var succeeded = await dal(async (dalService: IDalService) => {
-      model = await dalService.getMonitor(id);
-    }).catch(next);
-    if (!succeeded) return;
-    if (!model) {
-      res.status(404).json("404 Not Found");
-      return;
-    }
-    res.status(200).json(model);
-  });
+  //   var model: IMonitor | null = null;
+  //   var succeeded = await dal(async (dalService: IDalService) => {
+  //     model = await dalService.getMonitor(id);
+  //   }).catch(next);
+  //   if (!succeeded) return;
+  //   if (!model) {
+  //     res.status(404).json("404 Not Found");
+  //     return;
+  //   }
+  //   res.status(200).json(model);
+  // });
 
   // All remaining requests return the Angular app, so it can handle routing.
   app.get("*", function (req, res) {

@@ -11,10 +11,6 @@ export interface IDalService {
   saveUser(model: User): Promise<void>;
   savePrayerRequest(model: PrayerRequest): Promise<PrayerRequest>;
   getTopPrayerRequests(userId: string): Promise<PrayerRequest[]>;
-  saveMonitor(model: IMonitor): Promise<void>;
-  getAllMonitors(userEmail: string): Promise<IMonitor[]>;
-  getMonitor(id: string): Promise<IMonitor | null>;
-  deleteMonitor(id: string): Promise<void>;
   getPrayerRequest(id: string): Promise<PrayerRequest | null>;
 }
 

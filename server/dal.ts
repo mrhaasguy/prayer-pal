@@ -1,6 +1,14 @@
 import { Pool, PoolClient } from "pg";
-import { IMonitor, IDalService, User, PrayerRequest, UserEmail } from "./interfaces/types";
+import {
+  IMonitor,
+  IDalService,
+  User,
+  PrayerRequest,
+  UserEmail,
+} from "./interfaces/types";
 import { v4 as uuidv4 } from "uuid";
+import { fileExist } from "./utils";
+import * as fs from "fs";
 
 const pool = new Pool({
   connectionString:
@@ -8,6 +16,8 @@ const pool = new Pool({
     "postgresql://postgres@localhost:5432/prayerpal",
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
+
+let hasRunDatabaseUpdate = false;
 
 class DalService implements IDalService {
   client: PoolClient;
@@ -17,13 +27,18 @@ class DalService implements IDalService {
   }
 
   public async getAllPrimaryUserEmails(): Promise<UserEmail[]> {
-    const results = await this.client.query("SELECT * FROM user_emails where is_primary = true");
-    return results.rows.map(r => <UserEmail>{
-      id: r.id,
-      userId: r.user_id,
-      email: r.email,
-      isPrimary: r.is_primary
-    });
+    const results = await this.client.query(
+      "SELECT * FROM user_emails where is_primary = true"
+    );
+    return results.rows.map(
+      (r) =>
+        <UserEmail>{
+          id: r.id,
+          userId: r.user_id,
+          email: r.email,
+          isPrimary: r.is_primary,
+        }
+    );
   }
 
   public async getUserByEmail(email: string): Promise<User | undefined> {
@@ -32,14 +47,18 @@ class DalService implements IDalService {
       "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE u.id IN (select user_id FROM user_emails where email = $1)",
       [email]
     );
-    console.log('Found query result: ' + JSON.stringify(results.rows));
+    console.log("Found query result: " + JSON.stringify(results.rows));
     let user: User | undefined = undefined;
-    results.rows.forEach(r => { 
-      user = user ?? {id: r.user_id, fullName: r.fullname, emails: []};
-      user.emails.push({userId: user.id ?? '', email: r.email, isPrimary: r.is_primary});
+    results.rows.forEach((r) => {
+      user = user ?? { id: r.user_id, fullName: r.fullname, emails: [] };
+      user.emails.push({
+        userId: user.id ?? "",
+        email: r.email,
+        isPrimary: r.is_primary,
+      });
     });
 
-    console.log('Found user: ' + JSON.stringify(user ?? {}));
+    console.log("Found user: " + JSON.stringify(user ?? {}));
     return user;
   }
   public async getUserByName(fullName: string): Promise<User | undefined> {
@@ -48,14 +67,18 @@ class DalService implements IDalService {
       "SELECT * FROM users u LEFT JOIN user_emails ue ON u.id = ue.user_id WHERE u.fullname = $1",
       [fullName]
     );
-    console.log('Found query result: ' + JSON.stringify(results.rows));
+    console.log("Found query result: " + JSON.stringify(results.rows));
     let user: User | undefined = undefined;
-    results.rows.forEach(r => { 
-      user = user ?? {id: r.user_id, fullName: r.fullname, emails: []};
-      user.emails.push({userId: user.id ?? '', email: r.email, isPrimary: r.is_primary});
+    results.rows.forEach((r) => {
+      user = user ?? { id: r.user_id, fullName: r.fullname, emails: [] };
+      user.emails.push({
+        userId: user.id ?? "",
+        email: r.email,
+        isPrimary: r.is_primary,
+      });
     });
 
-    console.log('Found user: ' + JSON.stringify(user ?? {}));
+    console.log("Found user: " + JSON.stringify(user ?? {}));
     return user;
   }
   public async saveUser(model: User) {
@@ -80,7 +103,9 @@ class DalService implements IDalService {
       if (results.rows.length === 0) {
         let emailId = uuidv4();
 
-        console.log("Saving new user_email " + emailId + " for user " + email.userId);
+        console.log(
+          "Saving new user_email " + emailId + " for user " + email.userId
+        );
         await this.client.query(
           "INSERT INTO user_emails (id, user_id, email, is_primary) VALUES ($1, $2, $3, $4);",
           [emailId, email.userId, email.email, email.isPrimary]
@@ -100,9 +125,11 @@ class DalService implements IDalService {
     );
     if (alreadyExistsResults.rows.length > 0) {
       model.id = alreadyExistsResults.rows[0].id;
-      console.log("Prayer request " + model.id + " already exists, updating date");
+      console.log(
+        "Prayer request " + model.id + " already exists, updating date"
+      );
       await this.updatePrayerRequestEmailDate(model);
-      return (await this.getPrayerRequest(model.id ?? '')) ?? model;
+      return (await this.getPrayerRequest(model.id ?? "")) ?? model;
     }
 
     if (!model.id) {
@@ -111,22 +138,31 @@ class DalService implements IDalService {
 
     console.log("INSERT Prayer request " + model.id);
     await this.client.query(
-      "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " + "VALUES ($1, $2, $3, $4, $5, $6, $7);",
-      [model.id, model.userId, model.date, model.from, model.subject, model.category, model.message]
+      "INSERT INTO prayer_requests (id, user_id, email_date, from_email, subject, category, message) " +
+        "VALUES ($1, $2, $3, $4, $5, $6, $7);",
+      [
+        model.id,
+        model.userId,
+        model.date,
+        model.from,
+        model.subject,
+        model.category,
+        model.message,
+      ]
     );
     return model;
   }
 
   public async updatePrayerRequest(model: PrayerRequest): Promise<void> {
-
     await this.client.query(
       "UPDATE prayer_requests SET email_date = $1, prayer_count = $2, last_prayer_date = $3 WHERE id = $4",
       [model.date, model.prayerCount, model.lastPrayerDate, model.id]
     );
     return;
   }
-  public async updatePrayerRequestEmailDate(model: PrayerRequest): Promise<void> {
-
+  public async updatePrayerRequestEmailDate(
+    model: PrayerRequest
+  ): Promise<void> {
     await this.client.query(
       "UPDATE prayer_requests SET email_date = $1 WHERE id = $2",
       [model.date, model.id]
@@ -140,17 +176,20 @@ class DalService implements IDalService {
       [id]
     );
     if (results.rows.length > 0) {
-      return results.rows.map(r => <PrayerRequest>{
-        id: r.id,
-        userId: r.user_id,
-        date: r.email_date,
-        from: r.from_email,
-        subject: r.subject,
-        category: r.category,
-        message: r.message,
-        lastPrayerDate: r.last_prayer_date,
-        prayerCount: r.prayer_count
-      })[0];
+      return results.rows.map(
+        (r) =>
+          <PrayerRequest>{
+            id: r.id,
+            userId: r.user_id,
+            date: r.email_date,
+            from: r.from_email,
+            subject: r.subject,
+            category: r.category,
+            message: r.message,
+            lastPrayerDate: r.last_prayer_date,
+            prayerCount: r.prayer_count,
+          }
+      )[0];
     }
     return null;
   }
@@ -160,63 +199,58 @@ class DalService implements IDalService {
       "SELECT * from prayer_requests where user_id = $1 AND email_date > current_date at time zone 'UTC' - interval '30 days' ORDER BY prayer_count ASC, last_prayer_Date DESC , RANDOM() LIMIT 10",
       [userId]
     );
-    return results.rows.map(r => <PrayerRequest>{
-      id: r.id,
-      userId: r.user_id,
-      date: r.email_date,
-      from: r.from_email,
-      subject: r.subject,
-      category: r.category,
-      message: r.message,
-      lastPrayerDate: r.last_prayer_date,
-      prayerCount: r.prayer_count
-    });
-  }
-
-  public async saveMonitor(model: IMonitor) {
-    if (!model.id) {
-      model.id = uuidv4();
-    }
-    await this.client.query(
-      "INSERT INTO monitor (id, keyword, user_email) " + "VALUES ($1, $2, $3);",
-      [model.id, model.keyword, model.userEmail]
+    return results.rows.map(
+      (r) =>
+        <PrayerRequest>{
+          id: r.id,
+          userId: r.user_id,
+          date: r.email_date,
+          from: r.from_email,
+          subject: r.subject,
+          category: r.category,
+          message: r.message,
+          lastPrayerDate: r.last_prayer_date,
+          prayerCount: r.prayer_count,
+        }
     );
   }
-  public async getAllMonitors(userEmail: string) {
+
+  public async updateDatabase(): Promise<void> {
+    console.log("Checking for database update");
     const results = await this.client.query(
-      "SELECT * from monitor where user_email = $1",
-      [userEmail]
+      "SELECT version from database_updates where id = 1"
     );
-    return results.rows.map(r => this.toMonitorModel(r));
-  }
-
-  private toMonitorModel(r: any): IMonitor {
-    return { id: r.id, keyword: r.keyword, userEmail: r.user_email };
-  }
-
-  public async getMonitor(id: string): Promise<IMonitor | null> {
-    const result = await this.client.query(
-      "SELECT * from monitor where id = $1",
-      [id]
-    );
-    if (result.rows.length === 0) {
-      return null;
+    const version: number = results.rows[0].version;
+    let nextVersion = version + 1;
+    while (
+      await fileExist("./server/database/migrations/" + nextVersion + ".sql")
+    ) {
+      console.log("Updating to version " + nextVersion);
+      let sql = fs
+        .readFileSync(
+          "./server/database/migrations/" + nextVersion + ".sql",
+          "utf8"
+        )
+        .toString();
+      await this.client.query(sql);
+      nextVersion += 1;
     }
-    return this.toMonitorModel(result.rows[0]);
-  }
-  public async deleteMonitor(id: string) {
-    await this.client.query("DELETE FROM monitor WHERE id = $1;", [id]);
+
+    console.log("Database updates completed");
   }
 
   dispose() {
     this.client.release();
   }
 }
-interface IDalMonitor {}
 export default async function dalServiceFactory(action: any) {
   var client = await pool.connect();
   var dalService = new DalService(client);
   try {
+    if (!hasRunDatabaseUpdate) {
+      await dalService.updateDatabase();
+      hasRunDatabaseUpdate = true;
+    }
     await action(dalService);
   } finally {
     dalService.dispose();

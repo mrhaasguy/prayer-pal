@@ -30,3 +30,10 @@ CREATE TABLE IF NOT EXISTS prayer_requests (
 	    REFERENCES users(id)
       ON DELETE NO ACTION
 );
+
+CREATE TABLE IF NOT EXISTS database_updates (
+  id INTEGER PRIMARY KEY,
+  version INTEGER NOT NULL DEFAULT(0)
+);
+
+INSERT INTO database_updates (id) VALUES (1);
