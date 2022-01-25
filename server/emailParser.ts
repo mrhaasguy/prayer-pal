@@ -51,7 +51,7 @@ export class EmailParser {
     }
     const lines = text.split('\n');
     let prayerRequests: PrayerRequest[] = [];
-    let from: string;
+    let from: string = "Unknown";
     let category: string;
     lines.forEach(line => {
       const lineTrimmed = line.trim();
