@@ -5,6 +5,7 @@ import os from "os";
 import dal from "./dal";
 import { IDalService, IMonitor } from "./interfaces/types";
 import { validate } from "uuid";
+import { generateDailyPrayersTemplate } from "./emailGenerator";
 
 const numCPUs = os.cpus().length;
 
@@ -94,6 +95,22 @@ if (!isDev && cluster.isPrimary) {
     }).catch(next);
 
     return res.status(200).send(message ?? "No messages");
+  });
+
+  app.get("/api/v1/prayer-request/daily", async (req, res, next) => {
+    const userId = req.query.userId;
+       if (!userId) return res.status(400).send("userId is required");
+    
+    let result:string | undefined = undefined;
+    await dal(async (dalService: IDalService) => {
+
+      const userEmail = await dalService.getPrimaryUserEmail(userId as string);
+      if (userEmail) {
+        result = await generateDailyPrayersTemplate(userEmail, dalService);
+      }
+    }).catch(next);
+
+    return res.status(200).send(result ?? "User not found");
   });
   // app.get("/api/v1/monitors", async (req, res, next) => {
   //   var email = req.query.userEmail;

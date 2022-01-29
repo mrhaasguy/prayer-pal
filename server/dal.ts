@@ -5,6 +5,7 @@ import {
   User,
   PrayerRequest,
   UserEmail,
+  PrimaryUserEmail,
 } from "./interfaces/types";
 import { v4 as uuidv4 } from "uuid";
 import { fileExist } from "./utils";
@@ -26,19 +27,36 @@ class DalService implements IDalService {
     this.client = client;
   }
 
-  public async getAllPrimaryUserEmails(): Promise<UserEmail[]> {
+  public async getAllPrimaryUserEmails(): Promise<PrimaryUserEmail[]> {
     const results = await this.client.query(
-      "SELECT * FROM user_emails where is_primary = true"
+      "SELECT * FROM user_emails ue INNER JOIN users u ON ue.user_id = u.id WHERE ue.is_primary = true"
     );
     return results.rows.map(
       (r) =>
-        <UserEmail>{
-          id: r.id,
+        <PrimaryUserEmail>{
           userId: r.user_id,
           email: r.email,
-          isPrimary: r.is_primary,
+          fullName: r.fullname
         }
     );
+  }
+
+  public async getPrimaryUserEmail(userId: string): Promise<PrimaryUserEmail | undefined> {
+    const results = await this.client.query(
+      "SELECT * FROM user_emails ue INNER JOIN users u ON ue.user_id = u.id WHERE ue.is_primary = true AND u.id = $1",
+      [userId]
+    );
+    if (results.rows.length > 0) {
+      return results.rows.map(
+        (r) =>
+          <PrimaryUserEmail>{
+            userId: r.user_id,
+            email: r.email,
+            fullName: r.fullname
+          }
+      )[0];
+    }
+    return undefined;
   }
 
   public async getUserByEmail(email: string): Promise<User | undefined> {

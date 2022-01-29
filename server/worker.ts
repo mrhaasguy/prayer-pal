@@ -1,25 +1,9 @@
 import dal from "./dal";
-import { IDalService, IMonitor, IEmail, User } from "./interfaces/types";
+import { IDalService } from "./interfaces/types";
 import nodemailer from "nodemailer";
-import { parseFullName } from "parse-full-name";
-import Mustache from "mustache";
-import * as fs from "fs";
+import { generateDailyPrayersTemplate } from "./emailGenerator";
 
 const result = require("dotenv").config();
-/**
- * Returns a random number between 0 (inclusive) and max (exclusive)
- */
-function random(max: number) {
-  return Math.floor(Math.random() * max);
-}
-function takeRandom<T>(array: T[], count: number): T[] {
-  let results: T[] = [];
-  for (let i = 0; i < count; i += 1) {
-    let index = random(array.length);
-    results.push(...array.splice(index, 1));
-  }
-  return results;
-}
 
 if (result.error) {
   console.error(result.error);
@@ -46,30 +30,8 @@ let transporter = nodemailer.createTransport({
   await dal(async (dalService: IDalService) => {
     var userEmails = await dalService.getAllPrimaryUserEmails();
     for (let i = 0; i < userEmails.length; i += 1) {
-      let userEmail = userEmails[i];
-      let prayerRequests = await dalService.getTopPrayerRequests(
-        userEmail.userId
-      );
-      prayerRequests = takeRandom(prayerRequests, 3);
-
-      let html = fs
-        .readFileSync("./server/templates/daily-prayers-email.html", "utf8")
-        .toString();
-
-      let index = 0;
-      html = Mustache.render(html, {
-        user: { name: "Aaron", id: userEmail.userId },
-        date: new Date(),
-        prayerRequests,
-        index: () => (index += 1),
-        FormatDate: function () {
-          return function (rawText: string, render: any) {
-            const rawDate = new Date(render(rawText));
-            console.log(rawDate);
-            return rawDate.toISOString().split("T")[0];
-          };
-        },
-      });
+      const userEmail = userEmails[i];
+      const html = await generateDailyPrayersTemplate(userEmail, dalService);
 
       let info = await transporter.sendMail({
         from: '"Prayer Pal" <' + process.env.SMTP_USER + ">", // sender address
@@ -85,9 +47,6 @@ let transporter = nodemailer.createTransport({
             "Friday",
             "Saturday",
           ][new Date().getUTCDay()], // Subject line
-        text:
-          "Hey there, \r\n Here are todays prayer requests:\r\n" +
-          JSON.stringify(prayerRequests, null, 2), // plain text body
         html,
       });
 
