@@ -12,7 +12,8 @@
     "start:listener": "ts-node server/emailListener.ts",
     "build": "cd angular-ui/ && npm run build",
     "test": "jest && cd angular-ui && npm test",
-    "jest": "jest"
+    "jest": "jest",
+    "connect:herokudb": "heroku pg:psql --app prayer-pal"
   },
   "cacheDirectories": [
     "node_modules",
