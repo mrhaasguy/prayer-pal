@@ -7,11 +7,12 @@ export interface IMonitor {
 export interface IDalService {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByName(fullName: string): Promise<User | undefined>;
-  getAllPrimaryUserEmails(): Promise<UserEmail[]>;
+  getAllPrimaryUserEmails(): Promise<PrimaryUserEmail[]>;
   saveUser(model: User): Promise<void>;
   savePrayerRequest(model: PrayerRequest): Promise<PrayerRequest>;
   getTopPrayerRequests(userId: string): Promise<PrayerRequest[]>;
   getPrayerRequest(id: string): Promise<PrayerRequest | null>;
+  getPrimaryUserEmail(userId: string): Promise<PrimaryUserEmail | undefined>;
 }
 
 export interface IEmail {
@@ -44,4 +45,10 @@ export interface UserEmail {
   userId: string;
   email: string;
   isPrimary: boolean;
+}
+
+export interface PrimaryUserEmail {
+  userId: string;
+  fullName: string;
+  email: string;
 }
