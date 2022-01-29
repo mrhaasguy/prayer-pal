@@ -233,6 +233,9 @@ class DalService implements IDalService {
         )
         .toString();
       await this.client.query(sql);
+      await this.client.query("update database_updates set version = $1;", [
+        nextVersion,
+      ]);
       nextVersion += 1;
     }
 
@@ -252,6 +255,9 @@ export default async function dalServiceFactory(action: any) {
       hasRunDatabaseUpdate = true;
     }
     await action(dalService);
+  } catch (e) {
+    console.log(e);
+    throw e;
   } finally {
     dalService.dispose();
   }
