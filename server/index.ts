@@ -6,6 +6,7 @@ import dal from "./dal";
 import { IDalService, IMonitor } from "./interfaces/types";
 import { validate } from "uuid";
 import { generateDailyPrayersTemplate } from "./emailGenerator";
+import { Aes256 } from "./utils";
 
 const numCPUs = os.cpus().length;
 
@@ -51,16 +52,24 @@ if (!isDev && cluster.isPrimary) {
   });
 
   app.get("/api/v1/prayer-request/prayed", async (req, res, next) => {
-    const userId = req.query.userId;
-    const prayerRequestIds = ((req.query.prayerRequestIds as string) ?? "")
-      .split(",")
-      .filter((i) => i.trim().length > 0);
+    const userId = req.query.userId as string;
+    let prayerRequestIds: string[];
+    try {
+      prayerRequestIds = (
+        Aes256.decrypt(
+          decodeURIComponent(req.query.prayerRequestIds as string)
+        ) ?? ""
+      )
+        .split(",")
+        .filter((i) => i.trim().length > 0);
+    } catch (e) {
+      console.error(e);
+      return res.status(400).send("unabled to decode prayerRequestIds");
+    }
     if (!userId) return res.status(400).send("userId is required");
     console.log(prayerRequestIds);
     if (!prayerRequestIds || !prayerRequestIds.length)
       return res.status(400).send("prayerRequestIds is required");
-    if (prayerRequestIds.length > 5)
-      return res.status(400).send("prayerRequestIds too long");
 
     let message: string = "";
     var succeeded = await dal(async (dalService: IDalService) => {
@@ -68,27 +77,26 @@ if (!isDev && cluster.isPrimary) {
         let id = prayerRequestIds[i].trim();
         if (id) {
           if (!validate(id)) {
-            message += id + " Not a valid GUID";
+            message += i + ": Not a valid GUID";
             continue;
           }
           console.log("Looking up prayerRequest " + id);
           var prayerRequest = await dalService.getPrayerRequest(id);
           if (prayerRequest) {
             if (prayerRequest.userId !== userId) {
-              message +=
-                prayerRequest.id + " Does not belong to the given userId<br>";
-              return;
+              message += i + ": Does not belong to the given userId<br>";
+              continue;
             }
             if (isDateBeforeToday(prayerRequest.lastPrayerDate)) {
-              message += prayerRequest.id + " Updated<br>";
+              message += i + ": Updated<br>";
               prayerRequest.prayerCount += 1;
               prayerRequest.lastPrayerDate = new Date();
               await dalService.savePrayerRequest(prayerRequest);
             } else {
-              message += prayerRequest.id + " Already updated today<br>";
+              message += i + ": Already updated today<br>";
             }
           } else {
-            message += id + " Not found<br>";
+            message += i + ": Not found<br>";
           }
         }
       }
