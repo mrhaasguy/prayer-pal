@@ -13,7 +13,7 @@ const numCPUs = os.cpus().length;
 const isDev = process.env.NODE_ENV !== "production";
 const PORT = process.env.PORT || 5000;
 
-function isDateBeforeToday(date: Date | null) {
+function isDateBeforeToday(date: Date | undefined) {
   if (!date) {
     return true;
   }
@@ -48,6 +48,14 @@ if (!isDev && cluster.isPrimary) {
 
   // API requests
   app.get("/api/v1/statuscheck", async (req, res) => {
+    res.status(200).json({ result: "OK" });
+  });
+  app.get("/api/v1/dbcheck", async (req, res) => {
+    try {
+      await dal(async (dalService: IDalService) => {});
+    } catch (e) {
+      return res.status(400).send({ result: "FAILED" });
+    }
     res.status(200).json({ result: "OK" });
   });
 
@@ -89,7 +97,7 @@ if (!isDev && cluster.isPrimary) {
             }
             if (isDateBeforeToday(prayerRequest.lastPrayerDate)) {
               message += i + ": Updated<br>";
-              prayerRequest.prayerCount += 1;
+              prayerRequest.prayerCount = (prayerRequest.prayerCount ?? 0) + 1;
               prayerRequest.lastPrayerDate = new Date();
               await dalService.savePrayerRequest(prayerRequest);
             } else {

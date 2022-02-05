@@ -10,6 +10,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { fileExist } from "./utils";
 import * as fs from "fs";
+import { Aes256 } from "./Aes256";
+import { stringSimilarity } from "string-similarity-js";
 
 const pool = new Pool({
   connectionString:
@@ -36,12 +38,14 @@ class DalService implements IDalService {
         <PrimaryUserEmail>{
           userId: r.user_id,
           email: r.email,
-          fullName: r.fullname
+          fullName: r.fullname,
         }
     );
   }
 
-  public async getPrimaryUserEmail(userId: string): Promise<PrimaryUserEmail | undefined> {
+  public async getPrimaryUserEmail(
+    userId: string
+  ): Promise<PrimaryUserEmail | undefined> {
     const results = await this.client.query(
       "SELECT * FROM user_emails ue INNER JOIN users u ON ue.user_id = u.id WHERE ue.is_primary = true AND u.id = $1",
       [userId]
@@ -52,7 +56,7 @@ class DalService implements IDalService {
           <PrimaryUserEmail>{
             userId: r.user_id,
             email: r.email,
-            fullName: r.fullname
+            fullName: r.fullname,
           }
       )[0];
     }
@@ -138,11 +142,20 @@ class DalService implements IDalService {
       return model;
     }
     const alreadyExistsResults = await this.client.query(
-      "SELECT * from prayer_requests where user_id = $1 AND category = $2 AND message = $3",
-      [model.userId, model.category, model.message]
+      "SELECT * from prayer_requests where user_id = $1 AND category = $2",
+      [model.userId, model.category]
     );
-    if (alreadyExistsResults.rows.length > 0) {
-      model.id = alreadyExistsResults.rows[0].id;
+
+    const similarPrayerRequest = alreadyExistsResults.rows.find((r) => {
+      const similarity = stringSimilarity(
+        model.message,
+        Aes256.decrypt(r.message) ?? ""
+      );
+      console.log(similarity);
+      return similarity > 0.8;
+    });
+    if (similarPrayerRequest) {
+      model.id = similarPrayerRequest.id;
       console.log(
         "Prayer request " + model.id + " already exists, updating date"
       );
@@ -165,7 +178,7 @@ class DalService implements IDalService {
         model.from,
         model.subject,
         model.category,
-        model.message,
+        Aes256.encrypt(model.message),
       ]
     );
     return model;
@@ -203,7 +216,7 @@ class DalService implements IDalService {
             from: r.from_email,
             subject: r.subject,
             category: r.category,
-            message: r.message,
+            message: Aes256.decrypt(r.message),
             lastPrayerDate: r.last_prayer_date,
             prayerCount: r.prayer_count,
           }
@@ -226,7 +239,7 @@ class DalService implements IDalService {
           from: r.from_email,
           subject: r.subject,
           category: r.category,
-          message: r.message,
+          message: Aes256.decrypt(r.message),
           lastPrayerDate: r.last_prayer_date,
           prayerCount: r.prayer_count,
         }
@@ -236,7 +249,7 @@ class DalService implements IDalService {
   public async updateDatabase(): Promise<void> {
     console.log("Checking for database update");
     const results = await this.client.query(
-      "SELECT version from database_updates where id = 1"
+      "SELECT version from database_updates where id = 1 FOR UPDATE;" // Lock the row so we won't run the db update more than once
     );
     const version: number = results.rows[0].version;
     let nextVersion = version + 1;
@@ -251,6 +264,12 @@ class DalService implements IDalService {
         )
         .toString();
       await this.client.query(sql);
+
+      if (
+        await fileExist("./server/database/migrations/" + nextVersion + ".ts")
+      ) {
+        await require("./database/migrations/" + nextVersion).run(this.client);
+      }
       await this.client.query("update database_updates set version = $1;", [
         nextVersion,
       ]);
@@ -264,17 +283,41 @@ class DalService implements IDalService {
     this.client.release();
   }
 }
+
+var beginTransaction = async (client: PoolClient) => {
+  console.log("Starting transaction...");
+  await client.query("BEGIN;");
+};
+var commitTransaction = async (client: PoolClient) => {
+  console.log("Committing transaction...");
+  await client.query("COMMIT;");
+};
+
+var rollbackTransaction = async (client: PoolClient) => {
+  try {
+    console.log("Rolling back transaction...");
+    await client.query("ROLLBACK;");
+    console.log("Rollback successful");
+  } catch (e2) {
+    console.error("error trying to ROLLBACK failed query", e2);
+  }
+};
 export default async function dalServiceFactory(action: any) {
   var client = await pool.connect();
   var dalService = new DalService(client);
   try {
+    await beginTransaction(client);
     if (!hasRunDatabaseUpdate) {
       await dalService.updateDatabase();
+      await commitTransaction(client);
+      await beginTransaction(client);
       hasRunDatabaseUpdate = true;
     }
     await action(dalService);
+    await commitTransaction(client);
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    await rollbackTransaction(client);
     throw e;
   } finally {
     dalService.dispose();
