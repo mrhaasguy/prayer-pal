@@ -6,7 +6,7 @@ import dal from "./dal";
 import { IDalService, IMonitor } from "./interfaces/types";
 import { validate } from "uuid";
 import { generateDailyPrayersTemplate } from "./emailGenerator";
-import { Aes256 } from "./utils";
+import { Aes256 } from "./Aes256";
 
 const numCPUs = os.cpus().length;
 

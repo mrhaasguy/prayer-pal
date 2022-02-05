@@ -31,8 +31,8 @@ export interface PrayerRequest {
   subject: string;
   category?: string;
   message: string;
-  prayerCount: number;
-  lastPrayerDate: Date | null;
+  prayerCount?: number;
+  lastPrayerDate?: Date;
 }
 
 export interface User {

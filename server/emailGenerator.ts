@@ -1,8 +1,9 @@
 import Mustache from "mustache";
 import { parseFullName } from "parse-full-name";
 import { IDalService } from "./interfaces/types";
-import { Aes256, takeRandom } from "./utils";
+import { takeRandom } from "./utils";
 import fs from "fs";
+import { Aes256 } from "./Aes256";
 
 export async function generateDailyPrayersTemplate(
   userEmail: { userId: string; fullName: string },
