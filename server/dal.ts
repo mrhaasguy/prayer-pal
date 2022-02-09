@@ -6,6 +6,7 @@ import {
   PrayerRequest,
   UserEmail,
   PrimaryUserEmail,
+  UserStats,
 } from "./interfaces/types";
 import { v4 as uuidv4 } from "uuid";
 import { fileExist } from "./utils";
@@ -27,6 +28,23 @@ class DalService implements IDalService {
 
   constructor(client: PoolClient) {
     this.client = client;
+  }
+
+  public async getUserStats(userId: string): Promise<UserStats> {
+    const results = await this.client.query(
+      "SELECT user_stats FROM users where id = $1",
+      [userId]
+    );
+    return results.rows[0]?.user_stats ?? {};
+  }
+  public async saveUserStats(
+    userId: string,
+    userStats: UserStats
+  ): Promise<void> {
+    await this.client.query("update users set user_stats = $1 where id = $2", [
+      userStats,
+      userId,
+    ]);
   }
 
   public async getAllPrimaryUserEmails(): Promise<PrimaryUserEmail[]> {

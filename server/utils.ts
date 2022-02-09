@@ -31,3 +31,12 @@ export function takeRandom<T>(array: T[], count: number): T[] {
   }
   return results;
 }
+
+export async function asyncForEach(
+  array: any[],
+  callback: (a: any) => Promise<void>
+) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index]);
+  }
+}

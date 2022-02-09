@@ -80,12 +80,13 @@ if (!isDev && cluster.isPrimary) {
       return res.status(400).send("prayerRequestIds is required");
 
     let message: string = "";
-    var succeeded = await dal(async (dalService: IDalService) => {
+    await dal(async (dalService: IDalService) => {
+      let userStats = await dalService.getUserStats(userId);
       for (let i = 0; i < prayerRequestIds.length; i += 1) {
         let id = prayerRequestIds[i].trim();
         if (id) {
           if (!validate(id)) {
-            message += i + ": Not a valid GUID";
+            message += i + ": Not a valid GUID<br>";
             continue;
           }
           console.log("Looking up prayerRequest " + id);
@@ -100,6 +101,17 @@ if (!isDev && cluster.isPrimary) {
               prayerRequest.prayerCount = (prayerRequest.prayerCount ?? 0) + 1;
               prayerRequest.lastPrayerDate = new Date();
               await dalService.savePrayerRequest(prayerRequest);
+
+              // Since we successfully marked the row as prayed for, also update userstats data
+              userStats.prayedRequestsTotalCount =
+                (userStats.prayedRequestsTotalCount ?? 0) + 1;
+              if (!userStats.prayedRequests) userStats.prayedRequests = [];
+              userStats.prayedRequests.push({
+                prayerRequestId: id,
+                emailDate: prayerRequest.date,
+                prayedDate: new Date(),
+                category: prayerRequest.category,
+              });
             } else {
               message += i + ": Already updated today<br>";
             }
@@ -108,6 +120,8 @@ if (!isDev && cluster.isPrimary) {
           }
         }
       }
+      await dalService.saveUserStats(userId, userStats);
+      message += "Updated user stats<br>";
     }).catch(next);
 
     return res.status(200).send(message ?? "No messages");

@@ -13,6 +13,8 @@ export interface IDalService {
   getTopPrayerRequests(userId: string): Promise<PrayerRequest[]>;
   getPrayerRequest(id: string): Promise<PrayerRequest | null>;
   getPrimaryUserEmail(userId: string): Promise<PrimaryUserEmail | undefined>;
+  getUserStats(userId: string): Promise<UserStats>;
+  saveUserStats(userId: string, userStats: UserStats): Promise<void>;
 }
 
 export interface IEmail {
@@ -51,4 +53,16 @@ export interface PrimaryUserEmail {
   userId: string;
   fullName: string;
   email: string;
+}
+
+export interface UserStatsPrayerRequest {
+  emailDate: Date;
+  prayedDate: Date;
+  prayerRequestId: string;
+  category: string | undefined;
+}
+
+export interface UserStats {
+  prayedRequestsTotalCount?: number;
+  prayedRequests?: UserStatsPrayerRequest[];
 }

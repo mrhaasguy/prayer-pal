@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN user_stats JSONB NOT NULL DEFAULT '{}'::jsonb;
