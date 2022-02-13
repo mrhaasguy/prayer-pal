@@ -1,3 +1,5 @@
+process.env.AES256_KEY = "TEST";
+
 import { IDalService, IMonitor, PrayerRequest } from "../interfaces/types";
 import dal from "../dal";
 
@@ -5,7 +7,9 @@ let disposed = false;
 let querySelectResults = [];
 const poolClient = {
   query: jest.fn((input: string, obj: object[]) => {
-    if (input === "SELECT version from database_updates where id = 1") {
+    if (
+      input === "SELECT version from database_updates where id = 1 FOR UPDATE;"
+    ) {
       return { rows: [{ version: 99 }] };
     }
     if (input.indexOf("SELECT") === 0) {
@@ -41,11 +45,11 @@ describe("dalService", () => {
       await dal(async (dalService: IDalService) => {
         await dalService.savePrayerRequest(prayerRequest);
       });
-      expect(poolClient.query).toHaveBeenCalledTimes(3);
-      expect(poolClient.query.mock.calls[2][0]).toContain(
+      expect(poolClient.query).toHaveBeenCalledTimes(7);
+      expect(poolClient.query.mock.calls[5][0]).toContain(
         "INSERT INTO prayer_requests"
       );
-      expect(poolClient.query.mock.calls[2][1]).toContain(prayerRequest.id); // insert statement should contain id
+      expect(poolClient.query.mock.calls[5][1]).toContain(prayerRequest.id); // insert statement should contain id
     });
     it("should create new id guid", async () => {
       let prayerRequest: PrayerRequest = {} as any;

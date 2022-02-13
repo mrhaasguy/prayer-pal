@@ -391,5 +391,155 @@ describe("emailParser", () => {
         },
       ]);
     });
+
+    it("should work3", () => {
+      let parser = new EmailParser();
+      const html = fs
+        .readFileSync("./server/tests/test3.input.html", "utf8")
+        .toString();
+      let date = new Date();
+      let results = parser.parseEmailToPrayerRequests("USERID", {
+        from: [{ address: "fake@email.com" }],
+        date: new Date(),
+        subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+        html,
+      });
+      expect(results).toStrictEqual([
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Joe - pray for A W, be with Joe as he gets close to his 1 yr mark with FF, pray for his wife and children",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "John L - pray for his daughter and future son-n-law's salvation and their up coming marriage, pray that John and Denise recover from COVID and don't have long COVID",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Jack - pray for my family and that I am learning and obeying what my role is in heading up my family per God's design, my business decisions and peace",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Gary - growth as a husband and praise for santification",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Danny - pray for his health and knees",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Bill - patience for him with his wife",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Curt - pray for wisdom without doubt",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Lee - pray for his family and praise God for all He does - Greatful",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Cory - praise that his potential divorce is on hold, continue to pray for his family",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Russell - nephew Chris's health",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Dave - be in prayer for his son Val",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Bob - pray for his brother-n-law Michael",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Matt - the world",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Terry - his family",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Jim Q - prayer that more would open up and talk things out",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Jim S - pray for all of our unsaved relatives and he and his wife as they continue on a sugar fast Comment [https://abfboone.ccbchurch.com/message_comment_list.php?message_id=10842&vi=1] Or simply reply to this email",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: undefined,
+        },
+      ]);
+    });
   });
 });

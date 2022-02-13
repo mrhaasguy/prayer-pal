@@ -79,6 +79,41 @@ export class EmailParser {
       }
     });
 
+    if (prayerRequests.length === 0) {
+      var fromFound = false;
+      var toFound = false;
+      var subjectFound = false;
+      category = undefined;
+      lines.forEach((line) => {
+        const lineTrimmed = line.trim();
+        if (lineTrimmed.indexOf("From:") === 0) {
+          fromFound = true;
+        } else if (lineTrimmed.indexOf("To:") === 0) {
+          toFound = true;
+        } else if (lineTrimmed.indexOf("Subject:") === 0) {
+          subjectFound = true;
+        } else if (email.subject.indexOf(lineTrimmed) >= 0) {
+          // skip lines that contain the subject
+        } else if (
+          fromFound &&
+          toFound &&
+          subjectFound &&
+          lineTrimmed.length > 10 &&
+          (lineTrimmed.indexOf(": ") > 0 || lineTrimmed.indexOf(" - ") > 0) &&
+          lineTrimmed.indexOf(" ") > 0
+        ) {
+          prayerRequests.push({
+            userId,
+            date: email.date,
+            message: lineTrimmed,
+            subject: email.subject,
+            from: email.from[0].address,
+            category,
+          });
+        }
+      });
+    }
+
     prayerRequests.forEach((p) => (p.from = from));
 
     return prayerRequests;
