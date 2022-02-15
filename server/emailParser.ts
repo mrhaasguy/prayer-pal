@@ -60,7 +60,7 @@ export class EmailParser {
     const lines = text.split("\n");
     let prayerRequests: PrayerRequest[] = [];
     let from: string = "Unknown";
-    let category: string;
+    let category: string | undefined;
     lines.forEach((line) => {
       const lineTrimmed = line.trim();
       if (lineTrimmed.startsWith("From:")) {
