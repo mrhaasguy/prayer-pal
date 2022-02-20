@@ -94,8 +94,9 @@ mailListener.on(
     console.log("FROM: ", mail.from);
     console.log("SUBJECT: " + mail.subject);
     console.log("DATE: " + mail.date);
-    console.log("BODY TEXT: " + mail.text);
-    console.log("BODY HTML: " + mail.html);
+    // Uncomment this to see the email body
+    // console.log("BODY TEXT: " + mail.text);
+    // console.log("BODY HTML: " + mail.html);
 
     var parser = new EmailParser();
     let user = await parser.parseUser(mail);
