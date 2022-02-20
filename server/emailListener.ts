@@ -21,7 +21,7 @@ var mailListener = new MailListener({
   host: process.env.SMTP_HOST,
   port: 993, // imap port
   tls: true,
-  debug: console.log, // Or your custom function with only one incoming argument. Default: null
+  //debug: console.log, // Or your custom function with only one incoming argument. Default: null
   tlsOptions: { rejectUnauthorized: false },
   mailbox: "INBOX", // mailbox to monitor
   markSeen: true, // all fetched email willbe marked as seen and not fetched next time
