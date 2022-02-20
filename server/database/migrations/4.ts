@@ -23,7 +23,7 @@ exports.run = async (client: PoolClient) => {
       "select count(prayer_count) as totalprayed from prayer_requests where user_id = $1 AND prayer_count > 0 AND email_date > '2022-01-22';",
       [user.id]
     );
-    jsonBlob.prayedRequestsTotalCount = results.rows[0].totalprayed;
+    jsonBlob.prayedRequestsTotalCount = parseInt(results.rows[0].totalprayed);
 
     var results = await client.query(
       "select email_date, id, category, last_prayer_date from prayer_requests where user_id = $1 AND last_prayer_date IS NOT NULL AND email_date > '2022-01-22' order by email_date asc;",

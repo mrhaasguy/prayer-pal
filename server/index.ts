@@ -104,7 +104,7 @@ if (!isDev && cluster.isPrimary) {
 
               // Since we successfully marked the row as prayed for, also update userstats data
               userStats.prayedRequestsTotalCount =
-                (userStats.prayedRequestsTotalCount ?? 0) + 1;
+                Number(userStats.prayedRequestsTotalCount ?? 0) + 1;
               if (!userStats.prayedRequests) userStats.prayedRequests = [];
               userStats.prayedRequests.push({
                 prayerRequestId: id,
