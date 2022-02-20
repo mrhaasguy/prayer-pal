@@ -1,31 +1,31 @@
 import dal from "./dal";
 import { IDalService, IEmail, User } from "./interfaces/types";
 import { EmailParser } from "./emailParser";
-import nodemailer from 'nodemailer';
-import {parseFullName} from 'parse-full-name';
+import nodemailer from "nodemailer";
+import { parseFullName } from "parse-full-name";
 
-const result = require('dotenv').config();
+const result = require("dotenv").config();
 if (result.error) {
-  console.error(result.error);
+  console.error("dotnet failed to load .env file");
 }
 
 var MailListener = require("mail-listener2");
 
 if (!process.env.SMTP_HOST) {
-  throw new Error('SMTP_HOST not provided');
+  throw new Error("SMTP_HOST not provided");
 }
 
 var mailListener = new MailListener({
-username: process.env.SMTP_USER,
-password: process.env.SMTP_PASSWORD,
-host: process.env.SMTP_HOST,
-port: 993, // imap port
-tls: true,
-debug: console.log, // Or your custom function with only one incoming argument. Default: null
-tlsOptions: { rejectUnauthorized: false },
-mailbox: "INBOX", // mailbox to monitor
-markSeen: true, // all fetched email willbe marked as seen and not fetched next time
-fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
+  username: process.env.SMTP_USER,
+  password: process.env.SMTP_PASSWORD,
+  host: process.env.SMTP_HOST,
+  port: 993, // imap port
+  tls: true,
+  debug: console.log, // Or your custom function with only one incoming argument. Default: null
+  tlsOptions: { rejectUnauthorized: false },
+  mailbox: "INBOX", // mailbox to monitor
+  markSeen: true, // all fetched email willbe marked as seen and not fetched next time
+  fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
 });
 
 mailListener.start(); // start listening
@@ -33,16 +33,16 @@ mailListener.start(); // start listening
 // stop listening
 //mailListener.stop();
 
-mailListener.on("server:connected", function(){
-console.log("imapConnected");
+mailListener.on("server:connected", function () {
+  console.log("imapConnected");
 });
 
-mailListener.on("server:disconnected", function(){
-console.log("imapDisconnected");
+mailListener.on("server:disconnected", function () {
+  console.log("imapDisconnected");
 });
 
-mailListener.on("error", function(err:any){
-console.log(err);
+mailListener.on("error", function (err: any) {
+  console.log(err);
 });
 
 // emailParsed {
@@ -86,59 +86,76 @@ console.log(err);
 //   to: [ { address: 'prayer@thehaashaus.com', name: '' } ],
 //   date: 2021-12-31T03:09:01.000Z,
 //   receivedDate: 2021-12-31T03:09:13.000Z,
-mailListener.on("mail", async function(mail: IEmail, seqno: any, attributes:any){
-// do something with mail object including attachments
-console.log('New email!');
-console.log('FROM: ', mail.from);
-console.log('SUBJECT: ' + mail.subject);
-console.log('DATE: ' + mail.date);
-console.log('BODY TEXT: ' + mail.text);
-console.log('BODY HTML: ' + mail.html);
+mailListener.on(
+  "mail",
+  async function (mail: IEmail, seqno: any, attributes: any) {
+    // do something with mail object including attachments
+    console.log("New email!");
+    console.log("FROM: ", mail.from);
+    console.log("SUBJECT: " + mail.subject);
+    console.log("DATE: " + mail.date);
+    console.log("BODY TEXT: " + mail.text);
+    console.log("BODY HTML: " + mail.html);
 
-var parser = new EmailParser();
-let user = await parser.parseUser(mail);
-if (!user) {
-  if (mail.from[0]?.name && mail.from[0].name.indexOf('Haas') >= 0) {
-    await dal(async (dalService: IDalService) => {
-      user = {fullName: parser.parseFullNameFromEmail(mail), emails: [{email: mail.from[0].address, isPrimary: true, userId:''}]}
-      await dalService.saveUser(user as User);
+    var parser = new EmailParser();
+    let user = await parser.parseUser(mail);
+    if (!user) {
+      if (mail.from[0]?.name && mail.from[0].name.indexOf("Haas") >= 0) {
+        await dal(async (dalService: IDalService) => {
+          user = {
+            fullName: parser.parseFullNameFromEmail(mail),
+            emails: [
+              { email: mail.from[0].address, isPrimary: true, userId: "" },
+            ],
+          };
+          await dalService.saveUser(user as User);
+        });
+      } else {
+        console.log(
+          'Ignoring email from "' +
+            mail.from[0]?.address +
+            '" since it is not a registered user'
+        );
+      }
+    }
+    if (user && user.id) {
+      console.log("parsing email...");
+      let prayerRequests = parser.parseEmailToPrayerRequests(user.id, mail);
+      await dal(async (dalService: IDalService) => {
+        prayerRequests = await Promise.all(
+          prayerRequests.map((p) => dalService.savePrayerRequest(p))
+        );
       });
-  } else {
-    console.log('Ignoring email from "' + mail.from[0]?.address + '" since it is not a registered user');
+
+      let transporter = nodemailer.createTransport({
+        host: "smtp.titan.email",
+        port: 465, // imap port
+        tls: {
+          requestCert: true,
+          rejectUnauthorized: false,
+        },
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+
+      // send mail with defined transport object
+      let info = await transporter.sendMail({
+        from: '"Prayer Pal" <' + process.env.SMTP_USER + ">", // sender address
+        to: mail.from[0]?.address,
+        subject: "Prayer Requests received", // Subject line
+        text:
+          "Hey " +
+          parseFullName(user.fullName).first +
+          ", \r\nI received the following prayer requests:\r\n" +
+          JSON.stringify(prayerRequests, null, 2), // plain text body
+      });
+
+      console.log("Email sent: %s", info.messageId);
+    }
+    //console.log("emailParsed", mail);
+    // mail processing code goes here
   }
-}
-if (user && user.id) {
-  console.log('parsing email...');
-  let prayerRequests = parser.parseEmailToPrayerRequests(user.id, mail);
-  await dal(async (dalService: IDalService) => {
-    prayerRequests = await Promise.all(prayerRequests.map(p => dalService.savePrayerRequest(p)));
-    });
-
-  let transporter = nodemailer.createTransport({
-    host: 'smtp.titan.email',
-    port: 465, // imap port
-    tls: {
-      requestCert: true,
-      rejectUnauthorized: false,
-   },
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD
-    },
-  });
-
-  // send mail with defined transport object
-  let info = await transporter.sendMail({
-    from: '"Prayer Pal" <' + process.env.SMTP_USER + '>', // sender address
-    to: mail.from[0]?.address ?? 'aaron@thehaashaus.com',
-    subject: "Prayer Requests received", // Subject line
-    text: "Hey " + parseFullName(user.fullName).first +", \r\nI received the following prayer requests:\r\n" + JSON.stringify(prayerRequests, null, 2), // plain text body
-  });
-
-  console.log("Email sent: %s", info.messageId);
-}
-//console.log("emailParsed", mail);
-// mail processing code goes here
-
-});
+);
