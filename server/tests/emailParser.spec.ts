@@ -400,7 +400,7 @@ describe("emailParser", () => {
       let date = new Date();
       let results = parser.parseEmailToPrayerRequests("USERID", {
         from: [{ address: "fake@email.com" }],
-        date: new Date(),
+        date,
         subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
         html,
       });
@@ -538,6 +538,148 @@ describe("emailParser", () => {
           subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
           from: "Jack Sharp <abfboone@ccbchurch.com>",
           category: undefined,
+        },
+      ]);
+    });
+
+    it("should work4", () => {
+      let parser = new EmailParser();
+      const html = fs
+        .readFileSync("./server/tests/test4.input.html", "utf8")
+        .toString();
+      let date = new Date();
+      let results = parser.parseEmailToPrayerRequests("USERID", {
+        from: [{ address: "fake@email.com" }],
+        date,
+        subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+        html,
+      });
+
+      expect(results).toStrictEqual([
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Terry - his familly, his mom in assisted living, his children",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Scott - pray for his family and his 90 year old mother. Pray for the people of the world we live in and how quickly things seem to be falling",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Bob L - please lift up in pray the church in Jefferson that ABF is helping",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Jim S - continue to pray for our unsaved relatives and he and his wife as they continue on a 40 day sugar fast",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Michael Newman - pray for his father Bob Newman and himself",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Aaron - pray for he and his family as they begin a serch for more suitable living arrangements and that this process will not consume him, obedience",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Brian R - pray for his mom as she continues with treatment for cancer, and pray for his marriage and his children",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Michael Turner - he is thankful for the study and praying for the future of the Regular Joes group,, please pray for his wife's cousin and their family in their bereavement, and the family of Ron, a friend in England who has recently died",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Jack - please pray for peace and wisdom for me and my wife as we face some business decisions, pray for my children, also my mother in law Ann as she starts down the path of surgery to have her stomach removed due to cancer",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Russell - pray for his sister who suffers from anxiety and worry over a lot of things, pray for pastor Scott and his teaching",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "David Sexton - pray for his sister in law Katy who is recovering from a liver transplant, she is Jewish and pray that she meets the Lord",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Bill - pray for is daughter Lucy and her husband JT in Colorado as they make some tough decisions about their business",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message:
+            "Danny - pray that the Lord will provide him with some much needed new knees. Pray for a guy named Jim that he has been trying to get into a program and what Danny's role in this should be",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
+        },
+        {
+          userId: "USERID",
+          date,
+          message: "Curt - wisdom",
+          subject: "FW: [Adult: Men - Regular Joe’s] Prayer request",
+          from: "Jack Sharp <abfboone@ccbchurch.com>",
+          category: "Prayer request from 2.14.22",
         },
       ]);
     });

@@ -65,11 +65,14 @@ export class EmailParser {
       const lineTrimmed = line.trim();
       if (lineTrimmed.startsWith("From:")) {
         from = lineTrimmed.split("From:")[1].trim();
-      } else if (lineTrimmed.startsWith("* ")) {
+      } else if (
+        lineTrimmed.startsWith("* ") ||
+        /^[0-9]+\. /.test(lineTrimmed)
+      ) {
         prayerRequests.push({
           userId,
           date: email.date,
-          message: lineTrimmed.substring(2),
+          message: lineTrimmed.substring(lineTrimmed.indexOf(" ")).trim(),
           subject: email.subject,
           from: email.from[0].address,
           category,
