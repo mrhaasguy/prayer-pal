@@ -2,7 +2,7 @@ import fs from "fs";
 
 const result = require("dotenv").config();
 if (result.error) {
-  console.error("dotnet failed to load .env file");
+  console.error("dotenv failed to load .env file");
 }
 
 export function fileExist(filePath: string): Promise<boolean> {

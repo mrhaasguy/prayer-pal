@@ -6,7 +6,7 @@ import { generateDailyPrayersTemplate } from "./emailGenerator";
 const result = require("dotenv").config();
 
 if (result.error) {
-  console.error("dotnet failed to load .env file");
+  console.error("dotenv failed to load .env file");
 }
 
 if (!process.env.SMTP_HOST) {

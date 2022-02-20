@@ -6,7 +6,7 @@ import { parseFullName } from "parse-full-name";
 
 const result = require("dotenv").config();
 if (result.error) {
-  console.error("dotnet failed to load .env file");
+  console.error("dotenv failed to load .env file");
 }
 
 var MailListener = require("mail-listener2");
