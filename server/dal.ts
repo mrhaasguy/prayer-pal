@@ -213,8 +213,8 @@ class DalService implements IDalService {
     model: PrayerRequest
   ): Promise<void> {
     await this.client.query(
-      "UPDATE prayer_requests SET email_date = $1 WHERE id = $2",
-      [model.date, model.id]
+      "UPDATE prayer_requests SET email_date = $1, message = $2 WHERE id = $3",
+      [model.date, Aes256.encrypt(model.message), model.id]
     );
     return;
   }
