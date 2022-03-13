@@ -5,15 +5,15 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CssBaseline from "@mui/material/CssBaseline";
 import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Link from "@mui/material/Link";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { PrayerRequest } from "../interfaces/types";
-import { Avatar, CardHeader, IconButton } from "@mui/material";
+import { Avatar, CardHeader, IconButton, Paper } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 function stringToColor(string: string) {
   let hash = 0;
@@ -53,6 +53,10 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
           height: "100%",
           display: "flex",
           flexDirection: "column",
+          borderRadius: "1rem",
+          boxShadow: "5px 6px 10px 5px #dbdbe8",
+          backgroundColor: "#fff",
+          //marginRight: "-8px",
         }}
       >
         <CardHeader
@@ -82,8 +86,7 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button size="small">View</Button>
-          <Button size="small">Edit</Button>
+          <Button size="small">Prayed for</Button>
         </CardActions>
       </Card>
     </Grid>
@@ -144,14 +147,15 @@ export interface DailyPrayerEmailArgs {
 export default function DailyPrayerEmail(args: DailyPrayerEmailArgs) {
   const centerStyle = {
     display: "flex",
-    "justify-content": "center",
+    justifyContent: "center",
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <main>
-        {/* Hero unit 
+        <Paper sx={{ backgroundColor: "#f0f0f0" }}>
+          {/* Hero unit 
         <Box
           sx={{
             bgcolor: "background.paper",
@@ -190,16 +194,17 @@ export default function DailyPrayerEmail(args: DailyPrayerEmailArgs) {
             </Stack>
           </Container>
         </Box>*/}
-        <Container sx={{ py: 8 }} maxWidth="md">
-          {/* End hero unit */}
-          <Grid container spacing={4}>
-            {args.prayerRequests.map((prayerRequest) => (
-              <PrayerRequestCard
-                prayerRequest={prayerRequest}
-              ></PrayerRequestCard>
-            ))}
-          </Grid>
-        </Container>
+          <Container sx={{ py: 8 }} maxWidth="md">
+            {/* End hero unit */}
+            <Grid container spacing={4}>
+              {args.prayerRequests.map((prayerRequest) => (
+                <PrayerRequestCard
+                  prayerRequest={prayerRequest}
+                ></PrayerRequestCard>
+              ))}
+            </Grid>
+          </Container>
+        </Paper>
       </main>
       <div style={centerStyle}>
         <img
