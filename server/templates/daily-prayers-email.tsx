@@ -56,7 +56,12 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
         }}
       >
         <CardHeader
-          avatar={<Avatar {...stringAvatar(prayerRequest.from)}></Avatar>}
+          avatar={
+            <Avatar
+              {...stringAvatar(prayerRequest.from)}
+              sx={{ width: 56, height: 56 }}
+            ></Avatar>
+          }
           action={
             <IconButton aria-label="settings">
               <MoreVertIcon />
@@ -65,8 +70,8 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
           title={prayerRequest.from}
           subheader={
             <div>
-              <div>{prayerRequest.date.toDateString()}</div>
               <div>{prayerRequest.subject}</div>
+              <div>{prayerRequest.date.toDateString()}</div>
             </div>
           }
         />
