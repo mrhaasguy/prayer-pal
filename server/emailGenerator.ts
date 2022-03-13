@@ -26,20 +26,34 @@ export async function generateDailyPrayersTemplate(
       .filter((p) => !!p)
       .join(",")
   );
+
+  const urlBase = getUrlBase();
   const emailElement = React.createElement(DailyPrayerEmail, {
     user: {
       name: parseFullName(userEmail.fullName).first ?? userEmail.fullName,
       id: userEmail.userId,
     },
     prayerRequests,
-    prayedForUrl: `https://prayer-pal.herokuapp.com/api/v1/prayer-request/prayed?userId=${userEmail.userId}&prayerRequestIds=${encryptedPrayerRequestIds}`,
-    getMoreUrl: `https://prayer-pal.herokuapp.com/api/v1/prayer-request/daily?userId=${userEmail.userId}`,
+    prayedForUrl: `${urlBase}/api/v1/prayer-request/prayed?userId=${userEmail.userId}&prayerRequestIds=${encryptedPrayerRequestIds}`,
+    getMoreUrl: `${urlBase}/api/v1/prayer-request/daily?userId=${userEmail.userId}`,
   });
-  var reactHtml = juice(ReactDOMServer.renderToStaticMarkup(emailElement));
+  return renderReactToHtml(emailElement);
+}
+
+function renderReactToHtml(element: React.ReactElement) {
+  var reactHtml = juice(ReactDOMServer.renderToStaticMarkup(element));
 
   let html = fs
     .readFileSync("./server/templates/email-template-base.html", "utf8")
     .toString();
 
   return html.replace("{{BODY}}", reactHtml);
+}
+
+function getUrlBase() {
+  const env = process.env.ENVIRONMENT;
+  if (env) {
+    return env;
+  }
+  return "https://prayer-pal.herokuapp.com";
 }
