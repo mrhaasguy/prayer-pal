@@ -38,7 +38,9 @@ function stringToColor(string: string) {
 function stringAvatar(name: string) {
   return {
     sx: {
-      bgcolor: stringToColor(name),
+      backgroundColor: stringToColor(name),
+      width: 56,
+      height: 56,
     },
     children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
   };
@@ -60,12 +62,7 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
         }}
       >
         <CardHeader
-          avatar={
-            <Avatar
-              {...stringAvatar(prayerRequest.from)}
-              sx={{ width: 56, height: 56 }}
-            ></Avatar>
-          }
+          avatar={<Avatar {...stringAvatar(prayerRequest.from)}></Avatar>}
           action={
             <IconButton aria-label="settings">
               <MoreVertIcon />
