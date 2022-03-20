@@ -15,7 +15,7 @@ import { Avatar, CardHeader, IconButton, Paper } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 
-function stringToHslColor(str, s, l) {
+function stringToHslColor(str: string, s: number, l: number) {
   var hash = 0;
   for (var i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
