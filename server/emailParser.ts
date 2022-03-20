@@ -49,6 +49,21 @@ export class EmailParser {
     return user ?? null;
   }
 
+  private parseFromName(text: string): string {
+    const fromText = "from:";
+    let index = text.toLowerCase().indexOf(fromText);
+    if (index > 0) {
+      const results = text
+        .substring(index + fromText.length)
+        .split("\n")[0]
+        .trim();
+      if (results) {
+        return results;
+      }
+    }
+    return "Unknown";
+  }
+
   public parseEmailToPrayerRequests(
     userId: string,
     email: IEmail
@@ -59,16 +74,11 @@ export class EmailParser {
     }
     const lines = text.split("\n");
     let prayerRequests: PrayerRequest[] = [];
-    let from: string = "Unknown";
+    const from: string = this.parseFromName(text);
     let category: string | undefined;
     lines.forEach((line) => {
       const lineTrimmed = line.trim();
-      if (lineTrimmed.startsWith("From:")) {
-        from = lineTrimmed.split("From:")[1].trim();
-      } else if (
-        lineTrimmed.startsWith("* ") ||
-        /^[0-9]+\. /.test(lineTrimmed)
-      ) {
+      if (lineTrimmed.startsWith("* ") || /^[0-9]+\. /.test(lineTrimmed)) {
         prayerRequests.push({
           userId,
           date: email.date,

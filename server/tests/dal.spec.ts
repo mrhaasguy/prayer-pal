@@ -4,7 +4,7 @@ import { IDalService, IMonitor, PrayerRequest } from "../interfaces/types";
 import dal from "../dal";
 
 let disposed = false;
-let querySelectResults = [];
+let querySelectResults: any[] = [];
 const poolClient = {
   query: jest.fn((input: string, obj: object[]) => {
     if (
