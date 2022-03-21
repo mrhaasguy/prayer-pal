@@ -84,16 +84,54 @@ function PrayerRequestCard(args: { prayerRequest: PrayerRequest }) {
   );
 }
 
-function Footer(args: { args: DailyPrayerEmailArgs }) {
+const UserStats: React.FC<DailyPrayerEmailArgs> = (args) => {
+  return (
+    /*<Grid item key={prayerRequest.id} xs={12} sm={12} md={12}>
+      <Card
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: "1rem",
+          boxShadow: "5px 6px 10px 5px #dbdbe8",
+          backgroundColor: "#fff",
+          //marginRight: "-8px",
+        }}
+      >
+        <CardHeader
+          title={prayerRequest.from}
+          subheader={
+            <div>
+              <div>{prayerRequest.subject}</div>
+              <div>{prayerRequest.date.toDateString()}</div>
+            </div>
+          }
+        />
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography>
+            {prayerRequest.category ? `[${prayerRequest.category}] ` : ""}
+            {prayerRequest.message}
+          </Typography>
+        </CardContent>
+        <CardActions>
+          <Button size="small">Prayed for</Button>
+        </CardActions>
+      </Card>
+    </Grid>*/
+    <div>{JSON.stringify(args.stats)}</div>
+  );
+};
+
+const Footer: React.FC<DailyPrayerEmailArgs> = (args) => {
   return (
     <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">
       <div>
-        <Button variant="contained" href={args.args.prayedForUrl}>
+        <Button variant="contained" href={args.prayedForUrl}>
           I prayed for these today
         </Button>
       </div>
       <div>
-        <Button variant="outlined" href={args.args.getMoreUrl}>
+        <Button variant="outlined" href={args.getMoreUrl}>
           Click here for more prayer requests
         </Button>
       </div>
@@ -108,7 +146,7 @@ function Footer(args: { args: DailyPrayerEmailArgs }) {
       <Copyright />
     </Box>
   );
-}
+};
 
 function Copyright() {
   return (
@@ -125,6 +163,13 @@ function Copyright() {
 
 const theme = createTheme();
 
+export interface DailyPrayerEmailStats {
+  prayedForCount: number;
+  prayedForThisWeek: number;
+  prayedForDaily: (boolean | null)[];
+  userStats?: any;
+}
+
 export interface DailyPrayerEmailArgs {
   prayerRequests: PrayerRequest[];
   user: {
@@ -133,9 +178,10 @@ export interface DailyPrayerEmailArgs {
   };
   prayedForUrl: string;
   getMoreUrl: string;
+  stats: DailyPrayerEmailStats | undefined;
 }
 
-export default function DailyPrayerEmail(args: DailyPrayerEmailArgs) {
+const DailyPrayerEmail: React.FC<DailyPrayerEmailArgs> = (args) => {
   const centerStyle = {
     display: "flex",
     justifyContent: "center",
@@ -205,7 +251,10 @@ export default function DailyPrayerEmail(args: DailyPrayerEmailArgs) {
         />
       </div>
 
-      <Footer args={args}></Footer>
+      <Footer {...args}></Footer>
+      <UserStats {...args}></UserStats>
     </ThemeProvider>
   );
-}
+};
+
+export default DailyPrayerEmail;
