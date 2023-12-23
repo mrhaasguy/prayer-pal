@@ -1,6 +1,4 @@
-# bargain-price-monitor
-
-[![CircleCI](https://circleci.com/gh/mrhaasguy/bargain-price-monitor.svg?style=svg)](https://circleci.com/gh/mrhaasguy/bargain-price-monitor)
+# Prayer pal
 
 Front and backend application for a service that will help keep track of prayer requests
 
